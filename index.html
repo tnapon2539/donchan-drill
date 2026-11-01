@@ -845,6 +845,7 @@ function adminTick(dt,t){
  const live=phase==='run'||phase==='wait';
  for(const n of npcs){
   if(n.gone)continue;
+  if(n.dead){n.st=3;n.mode='still';n.route=[];n.tx=null;n.job=null;n.carried=0;n.fighting=0;n.fl=(n.fl|262144)&~(64|128|256|4096|131072|4|8);continue}
   if(ADM.ctl&&ADM.sel===n.id){continue}
   if(!live)continue;
   if(n.mode==='route'&&n.route.length){
@@ -973,7 +974,7 @@ function arrestSuspect(n){
 }
 
 /* ---- หนี ซ่อน สู้ ของ NPC ---- */
-const canCmd=n=>n&&!n.gone&&n.tp!=='suspect'&&n.tp!=='bed'&&!(n.fl&8)&&!n.fighting;
+const canCmd=n=>n&&!n.gone&&!n.dead&&n.tp!=='suspect'&&n.tp!=='bed'&&!(n.fl&8)&&!n.fighting;
 function npcFlee(n){if(!canCmd(n))return;n.job=null;n.claim=0;n.hold=0;n.tx=null;n.fl&=~(128|256|32);n.ev=true;sendTo(n,...asmPt(),4,64);RHF.run++}
 function npcHide(n){if(!canCmd(n))return;const h=pickHide(n.x,n.z);n.job=null;n.claim=0;n.tx=null;n.hold=1;n.fl&=~(64|256);sendTo(n,h[0]+rnd(-.5,.5),h[1]+rnd(-.5,.5),4,128);RHF.hide++}
 function npcFight(n){if(!canCmd(n))return null;return startFight({npc:n})}
@@ -1145,6 +1146,12 @@ function actLabel(role,d){
  return {police:'ขอใช้หน้าที่: จับกุม/สอบถามผู้ต้องสงสัย',doctor:'ขอใช้หน้าที่: ตรวจรักษาผู้ป่วย',nurse:'ขอใช้หน้าที่: ปฐมพยาบาลและคัดแยก',guard:'ขอใช้หน้าที่: นำอพยพประชาชน',porter:'ขอสั่งเคลื่อนย้ายคนไข้และญาติ',assistant:'ขอสั่งเคลื่อนย้ายคนไข้และญาติ'}[role]||'ขอใช้ปุ่มหน้าที่';
 }
 setInterval(()=>{const now=Date.now();pending.filter(a=>now-a.t>60000).forEach(a=>approve(a.id,false,true))},3000);
+function autoEndCheck(){
+ if(ADM.autoEnd===false||phase!=='run')return;
+ if(npcs.some(q=>q.tp==='suspect'&&!q.gone))return;
+ toast('ผู้ก่อเหตุถูกควบคุมตัวแล้ว กำลังจบการซ้อมอัตโนมัติ…',3500);
+ setTimeout(()=>{if(phase==='run'&&!npcs.some(q=>q.tp==='suspect'&&!q.gone))setPhase('end')},3500);
+}
 function escortTick(dt){
  for(const e of escorts.slice()){
   if(e.s.fightLock)continue;
@@ -1153,7 +1160,7 @@ function escortTick(dt){
    else if(!e.o.route.length){e.o.route=routeTo(e.o.x,e.o.z,e.s.x,e.s.z);e.o.mode='route';e.o.st=4}}
   else if(e.ph==='lead'){if(!esCar)esCar=newCar(CAR_IN,'in');
    if(!e.o.route.length&&!e.s.route.length&&esCar.ph==='park'){e.ph='load';e.t=0}}
-  else if(e.ph==='load'){e.t+=dt;if(e.t>1.6){[e.o,e.s].forEach(q=>{q.gone=1;q.x=q.z=999});lg('evt','ตำรวจ','','นำตัว '+NT[e.s.tp].th+' '+e.s.id+' ขึ้นรถตำรวจและออกจากโรงพยาบาล');if(esCar){esCar.ph='out';esCar.wp=CAR_OUT;esCar.i=0;esCar.v=1;esCar.done=false}escorts.splice(escorts.indexOf(e),1)}}
+  else if(e.ph==='load'){e.t+=dt;if(e.t>1.6){[e.o,e.s].forEach(q=>{q.gone=1;q.x=q.z=999});lg('evt','ตำรวจ','','นำตัว '+NT[e.s.tp].th+' '+e.s.id+' ขึ้นรถตำรวจและออกจากโรงพยาบาล');if(esCar){esCar.ph='out';esCar.wp=CAR_OUT;esCar.i=0;esCar.v=1;esCar.done=false}escorts.splice(escorts.indexOf(e),1);autoEndCheck()}}
  }
  if(esCar){
   if(esCar.ph==='in'||esCar.ph==='out'){stepCar(esCar,dt);if(esCar.done){if(esCar.ph==='in'){esCar.ph='park';esCar.v=0}else esCar=null}}
@@ -1272,6 +1279,7 @@ function setTab(k){
   B.innerHTML=`<div class="row"><span class="pill ${phase}" id="ph">${{wait:'รอเริ่ม',run:'กำลังซ้อม',pause:'พัก',end:'จบแล้ว'}[phase]}</span><b id="clock" style="font-variant-numeric:tabular-nums">00:00</b><span class="lab" id="np">ผู้เล่น 0 คน</span></div>
   <div class="row">${phase==='wait'?'<button class="btn" id="bStart">เริ่มซ้อม</button>':''}${phase==='run'?'<button class="btn sun" id="bPause">พัก</button>':''}${phase==='pause'?'<button class="btn" id="bRes">ซ้อมต่อ</button>':''}${phase==='run'||phase==='pause'?'<button class="btn red" id="bEnd">จบและสรุปผล</button>':''}${phase==='end'?'<button class="btn" id="bSum">ดูสรุปผล</button><button class="btn ghost" id="bFin">ดูฉากจบอีกครั้ง</button><button class="btn ghost" id="bReset">เริ่มรอบใหม่</button>':''}</div>
   <h2>การเข้าร่วมของผู้เล่น</h2><div class="row"><button class="btn sm ${roomOpen?'':'red'}" data-lock="1">${roomOpen?'🔓 เปิดรับผู้เล่นอยู่ (กดเพื่อปิด)':'🔒 ปิดรับผู้เล่นอยู่ (กดเพื่อเปิด)'}</button></div>
+  <label class="row" style="gap:8px"><input type="checkbox" id="autoEnd" style="width:20px;height:20px;padding:0" ${ADM.autoEnd===false?'':'checked'}> เมื่อตำรวจนำตัวคนร้ายขึ้นรถ ให้จบการซ้อมและขึ้นหน้าสรุปอัตโนมัติ</label>
   <label class="row" style="gap:8px"><input type="checkbox" id="autoIntro" style="width:20px;height:20px;padding:0" ${ADM.autoIntro?'checked':''}> เมื่อกดเริ่ม ให้เล่นฉากผู้ก่อเหตุเข้ามาทันที</label>
   <h2>สถานการณ์</h2><div class="row"><button class="btn sm red" data-e="sus">⚠️ ผู้ก่อเหตุบุกเข้ามา (ฉาก)</button><button class="btn sm sun" data-e="evac">🏃 สั่งอพยพ</button><button class="btn sm" data-e="move">🛏️ เคลื่อนย้ายคนไข้</button><button class="btn sm sun" data-e="fight">💪 สั่ง NPC รุมสู้ผู้ก่อเหตุ</button><button class="btn sm ghost" data-e="free">🕊 ปล่อยตัวประกัน</button></div>
   <h2>จุดรวมพล</h2><div class="row"><select id="thr" style="flex:1"><option value="auto">อัตโนมัติ (ตามทิศที่คนร้ายอยู่)</option><option value="E">คนร้ายมาทางขวา → ใช้จุด A (ซ้าย)</option><option value="W">คนร้ายมาทางซ้าย → ใช้จุด B (ขวา)</option></select></div><div class="sub" id="thrNow"></div>
@@ -1280,6 +1288,7 @@ function setTab(k){
   <div class="list" id="mList"></div><h2>แชท</h2><div class="list" id="aChat" style="font-size:13px;max-height:120px;overflow-y:auto"></div>`;
   const q=s=>B.querySelector(s);
   q('#bStart')&&(q('#bStart').onclick=()=>setPhase('run'));q('#bPause')&&(q('#bPause').onclick=()=>setPhase('pause'));q('#bRes')&&(q('#bRes').onclick=()=>setPhase('run'));q('#bEnd')&&(q('#bEnd').onclick=()=>setPhase('end'));q('#bSum')&&(q('#bSum').onclick=showSummary);q('#bFin')&&(q('#bFin').onclick=playFinale);q('#bReset')&&(q('#bReset').onclick=resetAll);
+  const ae=B.querySelector('#autoEnd');if(ae)ae.onchange=()=>{ADM.autoEnd=ae.checked};
   const ai=B.querySelector('#autoIntro');if(ai)ai.onchange=()=>{ADM.autoIntro=ai.checked};
   B.querySelectorAll('[data-lock]').forEach(b=>b.onclick=()=>{roomOpen=!roomOpen;lg('evt','แอดมิน','',roomOpen?'เปิดรับผู้เล่นเข้าห้อง':'ปิดรับผู้เล่นเข้าห้อง');const pk=npcPacket();if(room)room.emit('st',pk).catch(()=>{});toast(roomOpen?'เปิดรับผู้เล่นแล้ว':'ปิดรับผู้เล่นแล้ว (คนที่อยู่ในห้องยังเล่นต่อได้)',3000);setTab('ctl')});
   B.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>evt(b.dataset.e));
