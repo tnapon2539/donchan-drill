@@ -248,11 +248,11 @@ const ROLES={
 const LOOKS=[{skin:0xf2c29b,hair:0x2b1d14,n:'ผู้ชาย',f:0},{skin:0xf7cfb0,hair:0x4a2c1a,n:'ผู้หญิง',f:1}];
 const NT={patient:{th:'ผู้ป่วย',need:'med'},elder:{th:'ผู้สูงอายุ',need:'med'},bed:{th:'ผู้ป่วยใน',need:'med'},visitor:{th:'ประชาชน',need:''},relative:{th:'ญาติ',need:''},injured:{th:'ผู้บาดเจ็บ',need:'med'},suspect:{th:'ผู้ก่อเหตุ',need:'arrest'},staff:{th:'เจ้าหน้าที่',need:''},janitor:{th:'แม่บ้าน',need:''},police:{th:'ตำรวจ',need:''},guard:{th:'รปภ.',need:''},doctor:{th:'แพทย์',need:''},nurse:{th:'พยาบาล',need:''},porter:{th:'พนักงานเปล',need:''},assistant:{th:'ผู้ช่วยเหลือคนไข้',need:''}};
 const NTK=Object.keys(NT);
-const ZONES={er:[-16,-1,'ER'],ward:[40,-1,'IPD ผู้ป่วยใน'],lobby:[0,-2,'OPD/โถง'],pharm:[15,-8,'ห้องยา'],admin:[15,6,'บริหาร/สำนักงาน'],entr:[0,17,'หน้าโรงพยาบาล'],get assembly(){const b=ASMP[asmSide];return [b[0],b[1],'จุดรวมพล '+'AB'[asmSide]]},bay:[-50,-2,'ลาน EMS']};
-const RECT={er:[-24,-14,-9,12],ward:[21,-14,58,12],lobby:[-9,-14,9,12],pharm:[9,-14,21,-1],admin:[9,-1,21,12]};
-const DOORS={'er-lobby':[-9,-6],'pharm-lobby':[9,-7],'admin-lobby':[9,6],'lobby-out':[0,12.6],'er-out':[-24.6,-2],'ward-out':[40,12.6]};
-const NB={er:['lobby','out'],ward:['out'],pharm:['lobby'],admin:['lobby'],lobby:['er','pharm','admin','out'],out:['lobby','er','ward']};
-const doorOf=(a,b)=>DOORS[a+'-'+b]||DOORS[b+'-'+a];
+const ZONES={er:[-16,-1,'ER'],ward:[30.5,-1,'IPD ผู้ป่วยใน'],back:[15,-16.2,'ทางเดินด้านหลัง'],lobby:[0,-2,'OPD/โถง'],pharm:[15,-8,'ห้องยา'],admin:[15,6,'บริหาร/สำนักงาน'],entr:[0,17,'หน้าโรงพยาบาล'],get assembly(){const b=ASMP[asmSide];return [b[0],b[1],'จุดรวมพล '+'AB'[asmSide]]},bay:[-50,-2,'ลาน EMS']};
+const RECT={er:[-24,-14,-9,12],ward:[21,-14,40,12],back:[-9,-18.5,40,-14.01],lobby:[-9,-14,9,12],pharm:[9,-14,21,-1],admin:[9,-1,21,12]};
+const DOORS={'er-lobby':[-9,-6],'pharm-lobby':[9,-7],'admin-lobby':[9,6],'lobby-out':[0,12.6],'er-out':[-24.6,-2],'ward-out':[29.5,12.6],'ward-out2':[35,12.6],'lobby-back':[0,-14],'ward-back':[35,-14]};
+const NB={er:['lobby','out'],ward:['out','back'],pharm:['lobby'],admin:['lobby'],lobby:['er','pharm','admin','out','back'],out:['lobby','er','ward'],back:['lobby','ward']};
+const doorOf=(a,b,rx)=>{if((a==='ward'&&b==='out')||(a==='out'&&b==='ward')){const d1=DOORS['ward-out'],d2=DOORS['ward-out2'];return Math.abs(d1[0]-rx)<=Math.abs(d2[0]-rx)?d1:d2}return DOORS[a+'-'+b]||DOORS[b+'-'+a]};
 function zoneOf(x,z){for(const k in RECT){const r=RECT[k];if(x>=r[0]&&x<=r[2]&&z>=r[1]&&z<=r[3])return k}return 'out'}
 function outVia(x,z,tx,tz){
  if(x<-25&&z<12.3&&tz>=12.3&&tx>=-25)return [[-28,15]];
@@ -263,8 +263,8 @@ function outVia(x,z,tx,tz){
 function routeTo(x,z,tx,tz){
  const a=zoneOf(x,z),b=zoneOf(tx,tz);if(a===b){return a==='out'?[...outVia(x,z,tx,tz),[tx,tz]]:[[tx,tz]]}
  const q=[[a]],seen={[a]:1};let path=null;
- while(q.length){const p=q.shift(),l=p[p.length-1];if(l===b){path=p;break}for(const n of NB[l]){if(!seen[n]&&!(doorState[l+'-'+n]||doorState[n+'-'+l])){seen[n]=1;q.push(p.concat(n))}}}
- const pts=[];if(path)for(let i=0;i<path.length-1;i++){const d=doorOf(path[i],path[i+1]);if(d){const bay=d===DOORS['er-out'];if(bay&&path[i]==='out'&&z>6)pts.push([-28,15]);pts.push([d[0],d[1]]);if(bay&&path[i]==='er'&&tz>6)pts.push([-28,15])}}
+ while(q.length){const p=q.shift(),l=p[p.length-1];if(l===b){path=p;break}let nbl=NB[l];if((l==='lobby'||l==='ward')&&Math.random()<.5)nbl=nbl.slice().reverse();for(const n of nbl){if(!seen[n]&&!(doorState[l+'-'+n]||doorState[n+'-'+l])){seen[n]=1;q.push(p.concat(n))}}}
+ const pts=[];if(path)for(let i=0;i<path.length-1;i++){const d=doorOf(path[i],path[i+1],path[i]==='out'?tx:x);if(d){const bk=path[i]==='back'||path[i+1]==='back';if(bk&&path[i]==='back')pts.push([d[0],-16.2]);const bay=d===DOORS['er-out'];if(bay&&path[i]==='out'&&z>6)pts.push([-28,15]);pts.push([d[0],d[1]]);if(bk&&path[i+1]==='back')pts.push([d[0],-16.2]);if(bay&&path[i]==='er'&&tz>6)pts.push([-28,15])}}
  {const lp=pts.length?pts[pts.length-1]:[x,z];pts.push(...outVia(lp[0],lp[1],tx,tz))}
  pts.push([tx,tz]);return pts;
 }
@@ -309,8 +309,8 @@ const asmLab=[];
 function setAsmSide(v){asmSide=v?1:0;asmCirc.forEach((m,i)=>{try{m.material.color.setHex(i===asmSide?0x3ddc84:0xe5484d)}catch(e){}});
  if(typeof scene==='undefined')return;
  ASMP.forEach((b,i)=>{if(asmLab[i])scene.remove(asmLab[i]);const ok=i===asmSide;asmLab[i]=label('จุดรวมพล '+'AB'[i]+(ok?' ✔ ปลอดภัย':' ✖ อันตราย'),b[0],3.4,b[1]+7.4,1.2,ok?'#b8f5cf':'#ffc2bd')})}
-const BED=[[26,-9],[30,-9],[34,-9],[38,-9],[42,-9],[46,-9],[50,-9],[54,-9],[26,3],[30,3],[34,3],[46,3],[50,3],[54,3]];
-const DOORDEF={'er-lobby':[-9,-6,'v'],'pharm-lobby':[9,-7,'v'],'admin-lobby':[9,6,'v'],'ward-out':[40,12,'h'],'er-ems':[-24,-2,'v']};
+const BED=[[24,-11],[24,-5],[32,-11],[32,-6],[32,-1],[32,4],[38,-11],[38,-6],[38,-1],[38,4]];
+const DOORDEF={'er-lobby':[-9,-6,'v'],'pharm-lobby':[9,-7,'v'],'admin-lobby':[9,6,'v'],'ward-out':[29.5,12,'h',2.6],'ward-out2':[35,12,'h',2.6],'lobby-back':[0,-14,'h',3.4],'ward-back':[35,-14,'h',2.6],'er-ems':[-24,-2,'v']};
 const DOORK=Object.keys(DOORDEF),doorState={},doorMesh={},doorBase={},doorAx={},doorRect={},closedDoors=[];
 function applyDoor(k,c){c=c?1:0;if(doorState[k]===c)return;if(doorState[k]!==undefined&&typeof sfx==='function'){const r=doorRect[k];sfx('door',{x:(r[0]+r[2])/2,z:(r[1]+r[3])/2})}doorState[k]=c;const r=doorRect[k],i=closedDoors.indexOf(r);if(c&&i<0)closedDoors.push(r);if(!c&&i>=0)closedDoors.splice(i,1)}
 function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;const ax=doorAx[k],tg=doorBase[k]+(doorState[k]?0:4.1);m.position[ax]+=(tg-m.position[ax])*Math.min(1,dt*5)}}
@@ -318,7 +318,7 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
  const rc=0x6c7685,lw=0xffffff,pc=0xd8d2c4;
  const pw=(w,d,x,z)=>box(w,.04,d,pc,x,.09,z);
  box(260,.2,200,0x5fae6a,0,-.1,6);
- box(84,.12,28,0xa89b86,17,0.02,-1);                       // พื้นอาคาร
+ box(64,.12,34,0xa89b86,8,0.02,-3);                       // พื้นอาคาร
  // ---------- ถนน ----------
  box(300,.1,9,rc,0,.01,40);                                  // ถนนหลักแนวตะวันออก-ตะวันตก
  for(let i=-16;i<=16;i++)box(3,.02,.35,lw,i*9,.08,40);
@@ -328,7 +328,7 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
  for(let z=18;z<38;z+=3.2)box(.2,.02,1.4,lw,-42,.09,z);
  box(6,.1,24,rc,23,.03,28);                                  // ถนนทางออก (ตะวันออก)
  for(let z=20;z<38;z+=3.2)box(.2,.02,1.4,lw,23,.09,z);
- box(35,.08,8,0xb9bcc4,40.5,.04,17);                         // ลานหน้า IPD
+ box(19,.08,8,0xb9bcc4,30.5,.04,17);                         // ลานหน้า IPD
  box(5,.1,9,0xaab3c0,60,.02,36);                             // ทางเข้าสถานีตำรวจ
  box(16,5,9,0xe8eef9,60,2.5,28);box(16.4,.8,9.4,0x1c2d6b,60,5.3,28);box(4,3,.3,0x2b3350,60,1.5,32.6);box(14,.5,.2,0xff4d4d,60,3.9,32.55);
  label('สถานีตำรวจ',60,7.6,32.6,1.6,'#1c2d6b');
@@ -352,48 +352,64 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
   const fl=new T.Mesh(new T.BoxGeometry(.1,3.4,.1),lam(0xffffff));fl.position.set(b[0]+6.9,1.7,b[1]+6.9);scene.add(fl);box(1.4,.8,.05,0x26a269,b[0]+7.6,3.0,b[1]+6.9)});
  setAsmSide(0);
  // ---------- กำแพง ----------
- wall(-24,-14,58,-14);wall(58,-14,58,12);                    // เหนือ + ตะวันออก
- wall(-24,12,-3,12);wall(3,12,38,12);wall(42,12,58,12);      // ใต้ (เว้นประตูหลัก + ประตู IPD)
+ wall(-24,-14,-1.7,-14);wall(1.7,-14,33.7,-14);wall(36.3,-14,40,-14);wall(40,-14,40,12);   // เหนือ + ตะวันออก (เว้นประตูหลัง)
+ wall(-24,12,-3,12);wall(3,12,28.2,12);wall(30.8,12,33.7,12);wall(36.3,12,40,12);        // ใต้ (ประตูหลัก + IPD 2 ทาง)
+ // ทางเดินด้านหลัง OPD <-> IPD
+ wall(-9,-18.5,40,-18.5);wall(-9,-18.5,-9,-14);wall(40,-18.5,40,-14);
+ // IPD: ห้องพิเศษ 2 ห้อง + ห้องพยาบาล (ผนังเปิดช่องประตูกว้าง)
+ wall(21,-8,27,-8);wall(21,-2,27,-2);wall(27,-14,27,-12.6);wall(27,-9.4,27,-8);wall(27,-8,27,-6.6);wall(27,-3.4,27,-2);
+ wall(21,6,27,6);wall(27,6,27,8.4);wall(27,10.6,27,12);
+ // ห้อง ผอ. (มุมห้องบริหาร)
+ wall(14,6.5,21,6.5);wall(14,6.5,14,8.4);wall(14,10.6,14,12);
  wall(-24,-14,-24,-4);wall(-24,0,-24,12);                    // ตะวันตก (เว้นประตูข้าง ER)
  wall(-9,-14,-9,-8);wall(-9,-4,-9,12);                       // ER | OPD
  wall(9,-14,9,-9);wall(9,-5,9,4);wall(9,8,9,12);             // OPD | ห้องยา/บริหาร
  wall(9,-1,21,-1);                                           // ห้องยา | บริหาร
  wall(21,-14,21,12);                                         // บริหาร | IPD
- DOORK.forEach(k=>{const d=DOORDEF[k],x=d[0],z=d[1],v=d[2]==='v';doorAx[k]=v?'z':'x';doorBase[k]=v?z:x;
-  const lf=doorMesh[k]=v?box(.25,2.4,3.9,0x10b3a3,x,1.2,z+4.1):box(3.9,2.4,.25,0x10b3a3,x+4.1,1.2,z);
-  if(v){box(.3,.1,3.9,0xffc93c,0,1.1,0,lf);box(.32,.8,1.4,0x9fd8ff,0,.35,0,lf);doorRect[k]=[x-.15,z-1.95,x+.15,z+1.95];
-   box(.5,2.7,.3,0xffc93c,x,1.35,z-2.1);box(.5,2.7,.3,0xffc93c,x,1.35,z+2.1);wallMs.push(box(.5,.35,4.5,0xffc93c,x,2.55,z))}
-  else{box(3.9,.1,.3,0xffc93c,0,1.1,0,lf);box(1.4,.8,.32,0x9fd8ff,0,.35,0,lf);doorRect[k]=[x-1.95,z-.15,x+1.95,z+.15];
-   box(.3,2.7,.5,0xffc93c,x-2.1,1.35,z);box(.3,2.7,.5,0xffc93c,x+2.1,1.35,z);wallMs.push(box(4.5,.35,.5,0xffc93c,x,2.55,z))}});
+ DOORK.forEach(k=>{const d=DOORDEF[k],x=d[0],z=d[1],v=d[2]==='v',w=d[3]||3.9,h=w/2;doorAx[k]=v?'z':'x';doorBase[k]=v?z:x;
+  const lf=doorMesh[k]=v?box(.25,2.4,w,0x10b3a3,x,1.2,z+w+.2):box(w,2.4,.25,0x10b3a3,x+w+.2,1.2,z);
+  if(v){box(.3,.1,w,0xffc93c,0,1.1,0,lf);box(.32,.8,w*.36,0x9fd8ff,0,.35,0,lf);doorRect[k]=[x-.15,z-h,x+.15,z+h];
+   box(.5,2.7,.3,0xffc93c,x,1.35,z-h-.15);box(.5,2.7,.3,0xffc93c,x,1.35,z+h+.15);wallMs.push(box(.5,.35,w+.6,0xffc93c,x,2.55,z))}
+  else{box(w,.1,.3,0xffc93c,0,1.1,0,lf);box(w*.36,.8,.32,0x9fd8ff,0,.35,0,lf);doorRect[k]=[x-h,z-.15,x+h,z+.15];
+   box(.3,2.7,.5,0xffc93c,x-h-.15,1.35,z);box(.3,2.7,.5,0xffc93c,x+h+.15,1.35,z);wallMs.push(box(w+.6,.35,.5,0xffc93c,x,2.55,z))}});
  box(.3,2.7,.3,0xffc93c,-3.1,1.35,12);box(.3,2.7,.3,0xffc93c,3.1,1.35,12);wallMs.push(box(6.5,.35,.5,0xffc93c,0,2.55,12));
  // ---------- พื้นห้อง ----------
- box(15,.04,26,0x7fa9c4,-16.5,.05,-1);box(18,.04,26,0xc9b98a,0,.05,-1);box(12,.04,13,0xc4a77a,15,.05,-7.5);box(12,.04,13,0x9a8fc4,15,.05,5.5);box(37,.04,26,0x7fb596,39.5,.05,-1);
- label('ห้องฉุกเฉิน (ER)',-16.5,3.6,-12,1,'#ffd3cf');label('OPD / โถงต้อนรับ',0,3.6,-12,1,'#fff0b8');label('ห้องยา',15,3.6,-12,1,'#dcd3ff');label('บริหาร / สำนักงาน',15,3.6,10,1,'#d6e6ff');label('IPD ผู้ป่วยใน',39.5,3.6,-12,1.1,'#d8f5e3');
+ box(15,.04,26,0x7fa9c4,-16.5,.05,-1);box(18,.04,26,0xc9b98a,0,.05,-1);box(12,.04,13,0xc4a77a,15,.05,-7.5);box(12,.04,13,0x9a8fc4,15,.05,5.5);box(19,.04,26,0x7fb596,30.5,.05,-1);box(6,.04,6,0xd9c8e6,24,.06,-5);box(6,.04,6,0xd9c8e6,24,.06,-11);box(6,.04,6,0xcfe0f0,24,.06,9);box(7,.04,6.4,0xe6d3a8,17.5,.06,9.2);box(49,.04,4.5,0xb8b0a0,15.5,.05,-16.25);
+ label('ห้องฉุกเฉิน (ER)',-16.5,3.6,-12,1,'#ffd3cf');label('OPD / โถงต้อนรับ',0,3.6,-12,1,'#fff0b8');label('ห้องยา',15,3.6,-12,1,'#dcd3ff');label('บริหาร / สำนักงาน',15,3.6,10,1,'#d6e6ff');label('IPD ผู้ป่วยใน',31,3.6,-12,1.1,'#d8f5e3');
  // ---------- ป้ายหน้าอาคาร ----------
  wallMs.push(box(12,1.4,.4,0xffffff,0,3.8,12.2));label('โรงพยาบาลดอนจาน',0,4.0,13,1.5,'#10b3a3');
- label('ER ห้องฉุกเฉิน',-16.5,3.6,13,1.4,'#ffd3cf');label('IPD ผู้ป่วยใน',49,3.6,13,1.4,'#d8f5e3');label('บริหาร',15,3.6,13,1.2,'#d6e6ff');
+ label('ER ห้องฉุกเฉิน',-16.5,3.6,13,1.4,'#ffd3cf');label('IPD ผู้ป่วยใน',30.5,3.6,13,1.4,'#d8f5e3');label('บริหาร',15,3.6,13,1.2,'#d6e6ff');
  {const tx=new T.TextureLoader().load(LOGO_H);[[-9,5.6],[9,5.6]].forEach(p=>{const lm=new T.Mesh(new T.PlaneGeometry(3.4,3.4),new T.MeshBasicMaterial({map:tx,transparent:true}));lm.position.set(p[0],p[1],12.45);scene.add(lm)})}
  // ---------- เฟอร์นิเจอร์ ----------
- solid(0,-9,8,1,1.2,0x10b3a3);label('ลงทะเบียน',0,2.2,-9,.8);
+ solid(-4.5,-9,5,1,1.2,0x10b3a3);label('ลงทะเบียน',-4.5,2.2,-9,.8);
  for(const z of[-3,2,7])for(const x of[-6,-3,3,6])solid(x,z,1.8,.8,.6,0x7fb2e5);
  for(const x of[-21,-17,-13])for(const z of[-11,-6]){solid(x,z,1.3,2.3,.7,0xffffff);box(1.3,.08,2.3,0x6db7ff,x,.74,z)}
  solid(-16.5,6,7,.9,1.1,0x10b3a3);for(const x of[-21,-12])solid(x,9.5,1.3,2.3,.7,0xffffff);
  for(const x of[12,15,18])solid(x,-12.5,3,.8,2,0xc9a36b);solid(15,-4,6,.9,1.1,0x10b3a3);
- for(const x of[12.5,17.5])solid(x,9.5,2.4,1.2,.9,0xb88958);solid(15,2,5,1,.9,0xb88958);
+ solid(11.8,9.5,2,1.2,.9,0xb88958);solid(15,2,5,1,.9,0xb88958);
+ {solid(18.2,9.5,1.2,3.2,.9,0x8a5a2b);const dg=new T.Group();dg.position.set(19.7,0,9.5);dg.rotation.y=-Math.PI/2;scene.add(dg);
+  const sk=0xf1c9a0;box(.7,.1,.7,0x333b4a,0,.5,0,dg);box(.7,.8,.1,0x333b4a,0,.95,-.38,dg);box(.55,.75,.3,0x23395d,0,.97,0,dg);box(.12,.35,.08,0xffffff,0,1.1,.16,dg);
+  box(.4,.15,.55,0x23395d,0,.6,.3,dg);box(.16,.5,.16,0x23395d,-.12,.32,.55,dg);box(.16,.5,.16,0x23395d,.12,.32,.55,dg);box(.12,.12,.5,0x23395d,-.3,1.0,.25,dg);box(.12,.12,.5,0x23395d,.3,1.0,.25,dg);
+  const hd=new T.Mesh(new T.SphereGeometry(.2,14,10),lam(sk));hd.position.set(0,1.55,0);dg.add(hd);const hr=new T.Mesh(new T.SphereGeometry(.215,14,8),lam(0x2b2b2b));hr.position.set(0,1.6,-.04);hr.scale.set(1,.75,1);dg.add(hr);
+  [-.09,.09].forEach(gx=>{const rg=new T.Mesh(new T.TorusGeometry(.07,.014,6,14),lam(0x111111));rg.position.set(gx,1.56,.19);dg.add(rg)});box(.06,.015,.02,0x111111,0,1.57,.2,dg);box(.4,.02,.02,0x111111,0,1.57,.18,dg);
+  box(.7,.04,.5,0xffffff,-0.2,.96,.55,dg);label('ผอ.',19.7,2.5,9.5,.8,'#ffe6b8')}
+ box(.9,.4,.1,0x1c2d6b,18.4,1.4,8.4);
+ box(.5,.35,.08,0x1c2d6b,-18.5,1.35,6);box(.5,.35,.08,0x1c2d6b,-16.5,1.35,6);box(.5,.35,.08,0x1c2d6b,-14.5,1.35,6);label('เนิร์สสเตชั่น ER',-16.5,2.3,6,.8);
+ label('ห้องพิเศษ 1',24,2.6,-11,.8,'#e6d9f5');label('ห้องพิเศษ 2',24,2.6,-5,.8,'#e6d9f5');label('ห้องรวม',35,2.6,-12.5,.9,'#d8f5e3');label('ห้องพยาบาล IPD',24,2.6,9,.8,'#d6e6ff');label('ห้อง ผอ.',17.5,2.6,12.2,.9,'#ffe6b8');
  BED.forEach(b=>{solid(b[0],b[1],1.3,2.3,.7,0xffffff);box(1.3,.08,2.3,0xbfe9d0,b[0],.74,b[1])});
- solid(40,-3,12,1,1.1,0x10b3a3);label('เคาน์เตอร์พยาบาล',40,2.2,-3,.8);
+ solid(24,9.5,4,1,1.1,0x10b3a3);box(.5,.35,.08,0x1c2d6b,23,1.35,9.5);box(.5,.35,.08,0x1c2d6b,25,1.35,9.5);label('เนิร์สสเตชั่น IPD',24,2.2,8.3,.7);
  // ---------- เสาธงชาติ ----------
- box(.16,9,.16,0xd9dde3,10.5,4.5,14.2);{const sp=new T.Mesh(new T.SphereGeometry(.3,10,8),lam(0xffd45a));sp.position.set(10.5,9.1,14.2);scene.add(sp)}
- {let y=0;[[0xd32f2f,.28],[0xffffff,.28],[0x1a3a8f,.56],[0xffffff,.28],[0xd32f2f,.28]].forEach(e=>{box(3.3,e[1]+.01,.05,e[0],12.2,8.4-y-e[1]/2,14.2);y+=e[1]})}
- box(.5,.12,.5,0x9aa3ad,10.5,.15,14.2);
+ box(.16,9,.16,0xd9dde3,-17,4.5,21);{const sp=new T.Mesh(new T.SphereGeometry(.3,10,8),lam(0xffd45a));sp.position.set(-17,9.1,21);scene.add(sp)}
+ {let y=0;[[0xd32f2f,.28],[0xffffff,.28],[0x1a3a8f,.56],[0xffffff,.28],[0xd32f2f,.28]].forEach(e=>{box(3.3,e[1]+.01,.05,e[0],-15.2,8.4-y-e[1]/2,21);y+=e[1]})}
+ box(.5,.12,.5,0x9aa3ad,-17,.15,21);
  // ---------- แฟลตห้องพัก ----------
- box(36,.1,6,rc,78,.03,17);box(6,.1,20,rc,95,.03,8);
+ box(72,.1,6,rc,60,.03,17);box(6,.1,20,rc,95,.03,8);
  solid(108,0,26,14,13,0xe9d9c0);box(26.6,.5,14.6,0xb4533c,108,13.2,0);
  for(let r=0;r<3;r++)for(let c=0;c<6;c++){box(2,1.5,.1,0x9fd8ff,98+c*4,2.5+r*4,-7.1);box(2,1.5,.1,0x9fd8ff,98+c*4,2.5+r*4,7.1)}
  box(3,2.6,.12,0x8a5a2b,108,1.3,7.1);label('แฟลตห้องพัก (ห่างจาก IPD ~500 ม.)',108,15.4,0,1.4,'#ffe6b8');
  // ---------- ทางเดิน + เสาไฟ ----------
- pw(6,3,0,13.5);pw(4,9,40,17);pw(3,16,-28,15.5);
- for(let x=-20;x<=52;x+=12){box(.16,3.2,.16,0x4b5563,x,1.6,13.3);const l=new T.Mesh(new T.SphereGeometry(.28,10,8),new T.MeshBasicMaterial({color:0xfff2b0}));l.position.set(x,3.3,13.3);scene.add(l)}
+ pw(6,3,0,13.5);pw(4,9,29.5,17);pw(4,9,35,17);pw(3,16,-28,15.5);
+ for(let x=-20;x<=40;x+=12){box(.16,3.2,.16,0x4b5563,x,1.6,13.3);const l=new T.Mesh(new T.SphereGeometry(.28,10,8),new T.MeshBasicMaterial({color:0xfff2b0}));l.position.set(x,3.3,13.3);scene.add(l)}
  // ===== ฉากหลัง: แม่น้ำ ภูเขา ทุ่งนา ป่า =====
  {const R=(()=>{let q=11;return()=>{q=(q*16807)%2147483647;return q/2147483647}})();
   box(700,.2,600,0x7cbf84,0,-.25,0);
@@ -425,7 +441,7 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
   [trunk,can,can2].forEach(m=>{m.instanceMatrix.needsUpdate=true})}
 
  const tree=(x,z)=>{box(.5,2,.5,0x8a5a2b,x,1,z);const s=new T.Mesh(new T.SphereGeometry(1.8,12,10),lam(0x4fb35d));s.position.set(x,3.2,z);scene.add(s)};
- [[-72,10],[-72,-14],[-34,20],[64,6],[64,-10],[30,22],[-20,18],[-40,-18],[40,-18],[56,22],[-72,40]].forEach(p=>tree(p[0],p[1]));
+ [[-72,10],[-72,-14],[-34,20],[64,6],[64,-10],[30,22],[-20,18],[-40,-18],[46,-20],[56,22],[-72,40]].forEach(p=>tree(p[0],p[1]));
 })();
 
 /* ===== characters ===== */
@@ -871,7 +887,7 @@ function syncCam(){camUIs.forEach(ui=>{if(!ui.y.isConnected)return;const w=((cam
 const CIV=['visitor','relative','patient','staff','elder','janitor'];
 const ADM={multi:new Set(),mp:new Set(),follow:true,frz:{},sel:null,ctl:false,tab:'ctl',tx:0,tz:12,sim:false};
 let escorts=[],esCar=null,npcs=[],fires=[],nid=1,fid=1,t0=0,tEnd=0,banner='',bannerSeq=0,msns=[],mid=1,logs=[],evTimes=[],notes='',fireStart=0,fireOut=0;
-const HOME={er:[-22,-12,-11,10],ward:[23,-12,56,10],lobby:[-7,-12,7,10],pharm:[11,-12,19,-3],admin:[11,1,19,10],entr:[-14,14,14,19],get assembly(){const b=ASMP[asmSide];return [b[0]-5.5,b[1]-3,b[0]+5.5,b[1]+5.5]},bay:[-58,-8,-46,4]};
+const HOME={er:[-22,-12,-11,10],ward:[29,-12,39,10],lobby:[-7,-12,7,10],pharm:[11,-12,19,-3],admin:[10.5,0.5,13.5,10],entr:[-14,14,14,19],get assembly(){const b=ASMP[asmSide];return [b[0]-5.5,b[1]-3,b[0]+5.5,b[1]+5.5]},bay:[-58,-8,-46,4]};
 const SPEC={elder:.9,injured:1,bed:0,suspect:2.2};
 function lg(k,who,role,d,ok){logs.push({t:Date.now(),k,who:who||'',role:role||'',d:d||'',ok:ok===undefined?1:ok})}
 function fmt(ms){const s=Math.max(0,Math.round(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
@@ -902,7 +918,7 @@ function steer(n,dx,dz,d,sp,dt){
 }
 function sendTo(n,x,z,st,fl){n.route=routeTo(n.x,n.z,x,z);n.mode='route';if(st!==undefined)n.st=st;if(fl)n.fl|=fl}
 const FLEE=['visitor','relative','patient','staff','elder','janitor','doctor','nurse','porter','assistant'];
-const HIDE=[[-22.5,-12.5],[-22.5,10.5],[-10.5,10.5],[-10.5,-12.5],[10,-12.5],[20,-12.5],[10,10.5],[20,10.5],[22.5,-12.5],[22.5,10.5],[56.5,-12.5],[56.5,10.5],[-16,-13]];
+const HIDE=[[-22.5,-12.5],[-22.5,10.5],[-10.5,10.5],[-10.5,-12.5],[10,-12.5],[20,-12.5],[10,10.5],[20,10.5],[22.5,-12.5],[39.5,-12.5],[39.5,10.5],[-16,-13]];
 const RHF={run:0,hide:0,fight:0};
 function reactToSuspect(n,sus){
  if(n.fl&(4|8)||n.st===3||n.tp==='bed'||n.job||n.carried||n.claim||n.fighting)return;
@@ -1527,7 +1543,7 @@ function setTab(k){
  refreshLists();
 }
 function adminChatLog(d){lg('chat',d.n,d.r,d.m);const c=$('aChat');if(c){const p=document.createElement('div');p.innerHTML='<b>'+esc(d.n)+'</b> '+esc(d.m);c.appendChild(p);c.scrollTop=1e5}}
-function zoneName(x,z){const k=zoneOf(x,z);if(k!=='out')return ZONES[k][2];return Math.hypot(x-40,z-28)<9||Math.hypot(x+52,z+2)<9?'จุดรวมพล':x<-30&&z<14?'ลาน EMS':z>38?'ถนนหลัก':'ภายนอก'}
+function zoneName(x,z){const k=zoneOf(x,z);if(k!=='out')return ZONES[k][2];return Math.hypot(x-40,z-28)<9||Math.hypot(x+8,z-28)<9?'จุดรวมพล':x<-30&&z<14?'ลาน EMS':z>38?'ถนนหลัก':'ภายนอก'}
 function refreshLists(force){
  const e=$('mList');
  if(e){e.innerHTML=msns.slice().reverse().map(m=>{const el=Object.keys(roster).length;const need=[...roster.values()].filter(r=>m.to==='all'||m.to===r.r).length;return `<div class="it"><span>${esc(m.to==='all'?'ทุกอาชีพ':ROLES[m.to].th)}: ${esc(m.txt)}</span><span class="pill">${Object.keys(m.acks).length}/${need}</span></div>`}).join('')||'<p class="sub">ยังไม่มีภารกิจ</p>'}
