@@ -1438,7 +1438,7 @@ async function exportPdf(){
    }else{pdf.addImage(cv.toDataURL('image/jpeg',.9),'JPEG',M,y,w,hh);y+=hh+6}
   }
   root.remove();
-  await saveFile('สรุปผลซ้อมแผน.pdf',pdf.output('blob'));
+  await saveFile('สรุปผลซ้อมแผน_'+stamp()+'.pdf',pdf.output('blob'));
  }catch(e){console.error(e);toast('สร้าง PDF ไม่สำเร็จ ลองบันทึกเป็น HTML แทน',4000);document.querySelectorAll('body>div[style*="-12000px"]').forEach(x=>x.remove())}
 }
 $('sumPdf').onclick=exportPdf;
@@ -1486,14 +1486,15 @@ function showSummary(){
  $('sum').hidden=false;
 }
 $('sumClose').onclick=()=>{notes=($('sumNotes')||{}).value||notes;$('sum').hidden=true};
+function stamp(){const d=new Date(),z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'_'+z(d.getHours())+z(d.getMinutes())}
 async function saveFile(name,data){
  if(!dlCap){toast('บันทึกไฟล์ไม่ได้ในมุมมองนี้');return}
  try{await dlCap.save({filename:name,data});toast('บันทึกแล้ว')}catch(e){if(e&&e.code!=='declined')toast('บันทึกไม่สำเร็จ')}}
 $('sumExport').onclick=()=>{notes=($('sumNotes')||{}).value||notes;
  const css='body{font-family:sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#1b2a47}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ccd;padding:4px 6px;text-align:left}.bar{height:10px;background:#eef;border-radius:9px}.bar i{display:block;height:100%;background:#10b3a3;border-radius:9px}.row{display:flex;justify-content:space-between;gap:8px}.pill{border:1px solid #ccd;border-radius:9px;padding:1px 8px}';
- saveFile('สรุปผลซ้อมแผน.html','<!doctype html><meta charset="utf-8"><style>'+css+'</style>'+summaryHTML()+'<h2>บันทึกของผู้ประเมิน</h2><p>'+esc(notes).replace(/\n/g,'<br>')+'</p>')};
+ saveFile('สรุปผลซ้อมแผน_'+stamp()+'.html','<!doctype html><meta charset="utf-8"><style>'+css+'</style>'+summaryHTML()+'<h2>บันทึกของผู้ประเมิน</h2><p>'+esc(notes).replace(/\n/g,'<br>')+'</p>')};
 $('sumCsv').onclick=()=>{const q=s=>'"'+String(s).replace(/"/g,'""')+'"';
- saveFile('log-ซ้อมแผน.csv','﻿เวลา,ประเภท,ผู้ใช้,อาชีพ,รายละเอียด,สำเร็จ\n'+logs.map(l=>[fmt(l.t-(t0||l.t)),l.k,l.who,l.role,l.d,l.ok].map(q).join(',')).join('\n'))};
+ saveFile('log-ซ้อมแผน_'+stamp()+'.csv','﻿เวลา,ประเภท,ผู้ใช้,อาชีพ,รายละเอียด,สำเร็จ\n'+logs.map(l=>[fmt(l.t-(t0||l.t)),l.k,l.who,l.role,l.d,l.ok].map(q).join(',')).join('\n'))};
 
 
 /* ===== finale cutscene ===== */
