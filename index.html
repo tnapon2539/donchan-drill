@@ -294,6 +294,9 @@ function emojiSprite(e){
  if(!m){const c=document.createElement('canvas');c.width=c.height=96;const g=c.getContext('2d');g.font='64px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(e,48,52);m=new T.SpriteMaterial({map:new T.CanvasTexture(c),depthTest:false,transparent:true});lcache[k]=m}
  const s=new T.Sprite(m);s.scale.set(.9,.9,1);s.renderOrder=10;return s}
 
+let asmSide=0;const ASMP=[[-14,30],[22,31]],asmCirc=[];
+function asmPt(){const b=ASMP[asmSide];return [b[0]+rnd(-3,3),b[1]+rnd(-2.5,2.5)]}
+function setAsmSide(v){asmSide=v?1:0;asmCirc.forEach((m,i)=>{try{m.material.color.setHex(i===asmSide?0x3ddc84:0xe5484d)}catch(e){}})}
 const DOORDEF={'er-lobby':[-8,-6],'ward-lobby':[-8,6],'pharm-lobby':[8,-6],'admin-lobby':[8,6],'er-ems':[-22,-4]};
 const DOORK=Object.keys(DOORDEF),doorState={},doorMesh={},doorZ={},doorRect={},closedDoors=[];
 function applyDoor(k,c){c=c?1:0;if(doorState[k]===c)return;if(doorState[k]!==undefined&&typeof sfx==='function'){const r=doorRect[k];sfx('door',{x:r[0],z:(r[1]+r[3])/2})}doorState[k]=c;const r=doorRect[k],i=closedDoors.indexOf(r);if(c&&i<0)closedDoors.push(r);if(!c&&i>=0)closedDoors.splice(i,1)}
@@ -309,9 +312,10 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
  box(220,.1,9,0x6c7685,0,0.01,40);                        // road
  for(let i=-11;i<=11;i++)box(3,.02,.35,0xffffff,i*9,0.08,40);
  // assembly area
- const as=new T.Mesh(new T.CircleGeometry(6,32),lam(0x7be0a0));as.rotation.x=-Math.PI/2;as.position.set(0,.05,30);scene.add(as);
- label('จุดรวมพล',0,3.2,30,1.2,'#26a269');
- const fl=new T.Mesh(new T.BoxGeometry(.1,3.4,.1),lam(0xffffff));fl.position.set(4,1.7,28);scene.add(fl);box(1.4,.8,.05,0x26a269,4.7,3.0,28);
+ ASMP.forEach((b,i)=>{const as=new T.Mesh(new T.CircleGeometry(5.5,32),lam(0x7be0a0));as.rotation.x=-Math.PI/2;as.position.set(b[0],.05,b[1]);scene.add(as);asmCirc.push(as);
+  label('จุดรวมพล '+'AB'[i]+(i?' (ขวา)':' (ซ้าย)'),b[0],3.4,b[1],1.1,'#26a269');
+  const fl=new T.Mesh(new T.BoxGeometry(.1,3.4,.1),lam(0xffffff));fl.position.set(b[0]+3.6,1.7,b[1]-2);scene.add(fl);box(1.4,.8,.05,0x26a269,b[0]+4.3,3.0,b[1]-2)});
+ setAsmSide(0);
  // walls
  wall(-22,-12,22,-12);wall(22,-12,22,12);
  wall(-22,12,-3,12);wall(3,12,22,12);
@@ -522,7 +526,8 @@ let carTarget=null,carV=null;
 function applySt(d){
  if(d.p&&d.p!==phase){phase=d.p;sfxPhase(d.p);if(mode==='player'){if(phase==='end')playFinale();else{if(fin.on)endFinale(true);toast(phase==='run'?'เริ่มการซ้อม':phase==='pause'?'พักการซ้อม':'รอเริ่มการซ้อม')}}}
  if(mode==='player'&&d.bi!==undefined&&d.bi!==bannerId){bannerId=d.bi;if(d.b){sfx('alarm');const b=$('banner');b.textContent=d.b;b.hidden=false;clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>b.hidden=true,14000)}}
- if(d.k!==undefined){const on=!!d.k;if(on&&!cine){cineP=null;cineOff=false}if(!on)cineOff=false;cine=on?{x:d.k[0],z:d.k[1]}:null}
+ if(d.k!==undefined){const on=!!d.k;if(on&&!cine){cineP=null;cineOff=false}if(!on)cineOff=false;cine=on?{x:d.k[0],z:d.k[1]}:null;if(on)$('cinecap').textContent=d.k[2]?'⚔ ร่วมแรงจับกุมผู้ก่อเหตุ':'⚠ เหตุการณ์ผิดปกติที่ทางเข้าโรงพยาบาล'}
+ if(d.a!==undefined&&d.a!==asmSide){setAsmSide(d.a);if(mode==='player')toast('จุดรวมพลที่ปลอดภัยตอนนี้คือ จุด '+'AB'[asmSide],4000)}
  if(d.o!==undefined){const L=d.o===0;if(L!==roomLocked){roomLocked=L;updLock()}}
  if(!d.n)return;
  const seen=new Set();
@@ -649,7 +654,7 @@ function zigzag(path){
 function playerFlee(){
  if(phase==='end')return;if(held){toast('คุณถูกจับเป็นตัวประกัน ขยับไม่ได้');return}
  const ex=[DOORS['lobby-out'],DOORS['er-out']];let dn=1e9;ex.forEach(d=>{dn=Math.min(dn,Math.hypot(d[0]-pos.x,d[1]-pos.z))});
- if(dn<9||zoneOf(pos.x,pos.z)==='out'){const a=ZONES.assembly;goPath(a[0]+rnd(-4,4),a[1]+rnd(-3,3),true,()=>toast('ถึงจุดรวมพลแล้ว'));toast('ใกล้ทางออก วิ่งออกจากอาคาร')}
+ if(dn<9||zoneOf(pos.x,pos.z)==='out'){const a=asmPt();goPath(a[0],a[1],true,()=>toast('ถึงจุดรวมพล '+'AB'[asmSide]+' แล้ว'));toast('ใกล้ทางออก วิ่งไปจุดรวมพล '+'AB'[asmSide]+' (จุดสีเขียวที่ปลอดภัย)')}
  else{
   const h=pickHide(pos.x,pos.z);
   const path=routeTo(pos.x,pos.z,h[0],h[1]).map(p=>[p[0],p[1]]);
@@ -772,7 +777,7 @@ const CIV=['visitor','relative','patient','staff','elder','janitor'];
 const ADM={multi:new Set(),mp:new Set(),follow:true,frz:{},sel:null,ctl:false,tab:'ctl',tx:0,tz:12,sim:false};
 let escorts=[],esCar=null,npcs=[],fires=[],nid=1,fid=1,t0=0,tEnd=0,banner='',bannerSeq=0,msns=[],mid=1,logs=[],evTimes=[],notes='',fireStart=0,fireOut=0;
 const BED=[[-19,4],[-15,4],[-11,4],[-19,9],[-15,9],[-11,9]];
-const HOME={er:[-21,-11,-9,-1],ward:[-21,1,-9,11],lobby:[-7,-11,7,10],pharm:[9,-11,21,-3],admin:[9,-1,21,11],entr:[-12,14,12,22],assembly:[-5,26,5,34],bay:[-33,0,-25,8]};
+const HOME={er:[-21,-11,-9,-1],ward:[-21,1,-9,11],lobby:[-7,-11,7,10],pharm:[9,-11,21,-3],admin:[9,-1,21,11],entr:[-12,14,12,22],get assembly(){const b=ASMP[asmSide];return [b[0]-4,b[1]-4,b[0]+4,b[1]+4]},bay:[-33,0,-25,8]};
 const SPEC={elder:.9,injured:1,bed:0,suspect:2.2};
 function lg(k,who,role,d,ok){logs.push({t:Date.now(),k,who:who||'',role:role||'',d:d||'',ok:ok===undefined?1:ok})}
 function fmt(ms){const s=Math.max(0,Math.round(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
@@ -787,7 +792,7 @@ function addNpc(tp,zone,at){
  else if(tp==='suspect'){n.home='lobby'}
  n.x=p.x;n.z=p.z;npcs.push(n);return n}
 function npcPacket(){
- return {p:phase,b:banner,bi:bannerSeq,c:esCar?[Math.round(esCar.x*10),Math.round(esCar.z*10),Math.round(esCar.th*100)]:0,n:npcs.filter(n=>!n.gone).map(n=>[n.id,NTI.indexOf(n.tp),Math.round(n.x*10),Math.round(n.z*10),Math.round(n.ry*10),n.st,n.fl]),f:fires.map(f=>[f.x,f.z]),o:roomOpen?1:0,k:(intro&&intro.ph!=='enter')?[12.8,27.6]:0,d:DOORK.reduce((a,k,i)=>a|((doorState[k]?1:0)<<i),0)};
+ return {p:phase,b:banner,bi:bannerSeq,c:esCar?[Math.round(esCar.x*10),Math.round(esCar.z*10),Math.round(esCar.th*100)]:0,n:npcs.filter(n=>!n.gone).map(n=>[n.id,NTI.indexOf(n.tp),Math.round(n.x*10),Math.round(n.z*10),Math.round(n.ry*10),n.st,n.fl]),f:fires.map(f=>[f.x,f.z]),o:roomOpen?1:0,k:(intro&&intro.ph!=='enter')?[12.8,27.6]:(()=>{const f=fights.find(f=>f.ph==='fight');return f?[Math.round(f.s.x*10)/10,Math.round(f.s.z*10)/10,1]:0})(),a:asmSide,d:DOORK.reduce((a,k,i)=>a|((doorState[k]?1:0)<<i),0)};
 }
 function steer(n,dx,dz,d,sp,dt){
  const ox=n.x,oz=n.z,step=sp*dt;
@@ -809,23 +814,34 @@ function reactToSuspect(n,sus){
  if(!sus.length){if((n.fl&(128|256))&&!n.hold){n.fl&=~(128|256);n.mode='wander';n.st=0;n.route=[]}return}
  let s=null,sd=1e9;for(const q of sus){if(q.gone)continue;const d=Math.hypot(q.x-n.x,q.z-n.z);if(d<sd){sd=d;s=q}}
  if(!s)return;
- const seen=sd<4||(zoneOf(n.x,n.z)===zoneOf(s.x,s.z)&&sd<13);
+ const zs0=zoneOf(s.x,s.z),zn0=zoneOf(n.x,n.z),seen=sd<4||(zn0===zs0&&sd<13)||(zs0==='lobby'&&(zn0==='lobby'||zn0==='entr')&&sd<24);
  if(n.fl&256){if(sd>=4.5){n.fl&=~256}else return}
  if(!seen||(n.fl&(64|128)))return;
  if(sd<3){n.fl|=256;n.fl&=~(64|128);n.route=[];n.mode='still';n.st=0;n.ry=Math.atan2(s.x-n.x,s.z-n.z);RHF.fight++;lg('evt','','',NT[n.tp].th+' '+n.id+' เลือก "สู้" เพราะถูกประชิดตัว');return}
  if(n.tp==='elder'&&n.st===2&&Math.random()<.5){}
  const door=routeTo(n.x,n.z,0,30)[0];
  const nd=Math.hypot(door[0]-n.x,door[1]-n.z),dsd=Math.hypot(door[0]-s.x,door[1]-s.z);
- if(dsd>nd+2){n.ev=true;sendTo(n,rnd(-4,4),rnd(27,33),4,64);RHF.run++;lg('evt','','',NT[n.tp].th+' '+n.id+' เลือก "หนี" ออกจากอาคาร')}
+ if(dsd>nd+2){n.ev=true;sendTo(n,...asmPt(),4,64);RHF.run++;lg('evt','','',NT[n.tp].th+' '+n.id+' เลือก "หนี" ออกจากอาคาร')}
  else{
   const zs=zoneOf(s.x,s.z);let best=null,bd=-1;
   for(const h of HIDE){if(zoneOf(h[0],h[1])===zs)continue;const d=Math.hypot(h[0]-s.x,h[1]-s.z)+Math.random()*3;if(d>bd){bd=d;best=h}}
   if(best){sendTo(n,best[0],best[1],4,128);RHF.hide++;lg('evt','','',NT[n.tp].th+' '+n.id+' เลือก "ซ่อน"')}
  }
 }
-function startEvac(n){if(n.fl&(4|8|64))return;n.ev=true;sendTo(n,rnd(-4,4),rnd(27,33),4,64)}
+function startEvac(n){if(n.fl&(4|8|64))return;n.ev=true;sendTo(n,...asmPt(),4,64)}
 let acc=0,panicT=0,bcast=0,rosterT=0;
+let cineIv=[],cineOpen=0,thrT=0;
+function cineActive(){return !!((intro&&intro.ph!=='enter')||fights.some(f=>f.ph==='fight'))}
+function cineTrack(){const a=cineActive(),n=Date.now();if(a&&!cineOpen)cineOpen=n;else if(!a&&cineOpen){cineIv.push([cineOpen,n]);cineOpen=0}}
+function adj(x){let s=0;for(const iv of (cineOpen?cineIv.concat([[cineOpen,Date.now()]]):cineIv)){if(x>iv[0])s+=Math.min(x,iv[1])-iv[0]}return x-s}
+function updThreat(){
+ const m=ADM.threat||'auto';let side=asmSide;
+ if(m==='E')side=0;else if(m==='W')side=1;
+ else{const s=npcs.find(q=>q.tp==='suspect'&&!q.gone&&!(q.fl&8));if(s)side=s.x>=0?0:1}
+ if(side!==asmSide){setAsmSide(side);const m2='คนร้ายมาทาง'+(side?'ซ้าย':'ขวา')+' ใช้จุดรวมพล '+'AB'[side]+' ที่ปลอดภัย';if(phase==='run')setBanner(m2);else toast(m2)}
+}
 function adminTick(dt,t){
+ cineTrack();
  const live=phase==='run'||phase==='wait';
  for(const n of npcs){
   if(n.gone)continue;
@@ -870,11 +886,11 @@ function adminTick(dt,t){
  bcast-=dt;
  if(bcast<=0){bcast=.1;const pk=npcPacket();applySt(pk);if(room)room.emit('st',pk).catch(()=>{})}
  rosterT-=dt;
- if(rosterT<=0){rosterT=1;trackRoster();if(ADM.tab==='msn'||true)refreshLists();if(room)room.emit('msn',{l:msns.slice(-6).map(m=>[m.id,m.to,m.txt.slice(0,120)])}).catch(()=>{})}
+ if(rosterT<=0){rosterT=1;updThreat();trackRoster();if(ADM.tab==='msn'||true)refreshLists();if(room)room.emit('msn',{l:msns.slice(-6).map(m=>[m.id,m.to,m.txt.slice(0,120)])}).catch(()=>{})}
  // admin camera
  if(ADM.follow&&ADM.sel&&npcView.get(ADM.sel)){const v=npcView.get(ADM.sel);camT.x+=(v.x-camT.x)*Math.min(1,dt*5);camT.z+=(v.z-camT.z)*Math.min(1,dt*5)}
  else{camT.x+=(ADM.tx-camT.x)*Math.min(1,dt*6);camT.z+=(ADM.tz-camT.z)*Math.min(1,dt*6)}
- if(ADM.tab==='ctl'&&$('clock'))$('clock').textContent=phase==='run'?fmt(Date.now()-t0):phase==='end'?fmt(tEnd-t0):'00:00';
+ if(ADM.tab==='ctl'&&$('clock'))$('clock').textContent=phase==='run'?fmt(adj(Date.now())-adj(t0)):phase==='end'?fmt(adj(tEnd)-adj(t0)):'00:00';
 }
 function adminMove(dx,dz,sp,dt){
  const n=ADM.ctl&&npcs.find(q=>q.id===ADM.sel);
@@ -930,7 +946,7 @@ function moveTick(dt){
   if(s.job.ph==='go'){
    if(Math.hypot(s.x-t.x,s.z-t.z)<1.8){
     s.job.ph='push';t.carried=s.id;const lie=t.tp==='bed'||t.tp==='injured'||t.st===3;s.job.lie=lie;
-    t.st=lie?7:1;s.route=routeTo(s.x,s.z,rnd(-4,4),rnd(27,33));s.mode='route';s.st=8;
+    t.st=lie?7:1;s.route=routeTo(s.x,s.z,...asmPt());s.mode='route';s.st=8;
    }else{s.job.rt=(s.job.rt||0)-dt;if(!s.route.length||s.job.rt<=0){s.job.rt=1;s.route=routeTo(s.x,s.z,t.x,t.z);s.mode='route';s.st=4}}
   }else{
    const off=s.job.lie?1.2:.95;t.x=s.x+Math.sin(s.ry)*off;t.z=s.z+Math.cos(s.ry)*off;t.ry=s.ry;
@@ -958,7 +974,7 @@ function arrestSuspect(n){
 
 /* ---- หนี ซ่อน สู้ ของ NPC ---- */
 const canCmd=n=>n&&!n.gone&&n.tp!=='suspect'&&n.tp!=='bed'&&!(n.fl&8)&&!n.fighting;
-function npcFlee(n){if(!canCmd(n))return;n.job=null;n.claim=0;n.hold=0;n.tx=null;n.fl&=~(128|256|32);n.ev=true;sendTo(n,rnd(-4,4),rnd(27,33),4,64);RHF.run++}
+function npcFlee(n){if(!canCmd(n))return;n.job=null;n.claim=0;n.hold=0;n.tx=null;n.fl&=~(128|256|32);n.ev=true;sendTo(n,...asmPt(),4,64);RHF.run++}
 function npcHide(n){if(!canCmd(n))return;const h=pickHide(n.x,n.z);n.job=null;n.claim=0;n.tx=null;n.hold=1;n.fl&=~(64|256);sendTo(n,h[0]+rnd(-.5,.5),h[1]+rnd(-.5,.5),4,128);RHF.hide++}
 function npcFight(n){if(!canCmd(n))return null;return startFight({npc:n})}
 let fights=[];let roomOpen=true;let intro=null,npcCleared=false,pstat={};ADM.autoIntro=true;
@@ -967,6 +983,8 @@ let fights=[];let roomOpen=true;let intro=null,npcCleared=false,pstat={};ADM.aut
 const POST={x:13.4,z:25.6},DEADP={x:14.5,z:23.0};
 function introStart(){
  if(intro){toast('กำลังเล่นฉากเปิดเหตุการณ์อยู่');return}
+ if(ADM.threat==='W'){ADM.threat='auto'}
+ setAsmSide(0);
  let g=npcs.find(n=>n.tp==='guard'&&!n.gone&&!(n.fl&262144));
  if(!g)g=addNpc('guard','entr',{x:POST.x,z:POST.z});
  g.mode='still';g.route=[];g.tx=null;g.st=0;g.x=POST.x;g.z=POST.z;g.claim=1;g.leave=0;g.job=null;
@@ -1005,7 +1023,7 @@ function clearNpcsForPlayers(){
 }
 function sendCards(){
  if(!room)return;let i=0;
- roster.forEach((r,peer)=>{const ps=pstat[peer]||{};setTimeout(()=>emit('cmd',{to:peer,t:'card',ok:ps.ok||0,run:ps.run||0,hide:ps.hide||0,fight:ps.fight||0,held:ps.held||0,dur:tEnd-t0}),(i++)*80)});
+ roster.forEach((r,peer)=>{const ps=pstat[peer]||{};setTimeout(()=>emit('cmd',{to:peer,t:'card',ok:ps.ok||0,run:ps.run||0,hide:ps.hide||0,fight:ps.fight||0,held:ps.held||0,dur:adj(tEnd)-adj(t0)}),(i++)*80)});
 }
 
 /* ---- จับตัวประกัน: ผู้ก่อเหตุจับคนที่เดินชน/ตัวติดกัน แล้วลากไปด้วย ---- */
@@ -1030,18 +1048,19 @@ function hostageTick(dt){
  const sus=npcs.filter(n=>n.tp==='suspect'&&!n.gone&&!(n.fl&8)&&!n.fightLock&&!n.intro);
  for(const s of sus){
   s.hcd=Math.max(0,(s.hcd||0)-dt);
-  if(!hostages.some(h=>h.s===s)&&!s.hcd){
+  s.gcd=Math.max(0,(s.gcd||0)-dt);
+  if(hostages.filter(h=>h.s===s).length<4&&!s.hcd&&!s.gcd){
    let best=null,bd=1.05;
    if(room)for(const p of room.peers()){const q=p.presence;if(!q||!ROLES[q.r]||q.fa||hostages.some(h=>h.peer===p.peer))continue;const d=Math.hypot(q.x-s.x,q.z-s.z);if(d<bd){bd=d;best={peer:p.peer,name:(q.n||'ผู้เล่น')+' ('+ROLES[q.r].th+')'}}}
    for(const n of npcs){if(n.gone||n===s||n.tp==='suspect'||n.tp==='bed'||n.tp==='police'||n.st===3||(n.fl&(4|8|524288))||n.fighting||n.esc||n.leave)continue;
     if(hostages.some(h=>h.npc===n))continue;const d=Math.hypot(n.x-s.x,n.z-s.z);if(d<Math.min(bd,.95)){bd=d;best={npc:n,name:NT[n.tp].th+' '+n.id}}}
-   if(best)grabHostage(s,best);
+   if(best){grabHostage(s,best);s.gcd=1.5}
   }
  }
  for(const h of hostages.slice()){
-  const s=h.s;
+  const s=h.s,hi=hostages.filter(q=>q.s===s).indexOf(h);
   if(!npcs.includes(s)||s.gone||(s.fl&8)||s.fightLock||(h.kind==='n'&&(h.npc.gone||!npcs.includes(h.npc)))||(h.kind==='p'&&!(room&&room.peers().some(p=>p.peer===h.peer)))){releaseHostages(s);continue}
-  const tx=s.x-Math.sin(s.ry)*.95,tz=s.z-Math.cos(s.ry)*.95;
+  const off=.95+hi*.85,sw=hi?(hi%2?.5:-.5):0,tx=s.x-Math.sin(s.ry)*off+Math.cos(s.ry)*sw,tz=s.z-Math.cos(s.ry)*off-Math.sin(s.ry)*sw;
   if(h.kind==='n'){const n=h.npc;n.x+=(tx-n.x)*Math.min(1,dt*8);n.z+=(tz-n.z)*Math.min(1,dt*8);n.ry=s.ry;n.st=1;n.mode='still'}
   else{h.t=(h.t||0)-dt;if(h.t<=0){h.t=.1;emit('cmd',{to:h.peer,t:'drag',x:tx,z:tz,ry:s.ry})}}
  }
@@ -1229,20 +1248,22 @@ function setPhase(p){
  const wasWait=phase==='wait';phase=p;const pk=npcPacket();if(room)room.emit('st',pk).catch(()=>{});setTab(ADM.tab);renderPbar();if(p==='end'){playFinale();sendCards()}
  if(p==='run'&&wasWait&&ADM.autoIntro)introStart();
 }
-function resetAll(){incT=0;arrT=0;execAt={};ADM.manual={};hostages=[];intro=null;npcCleared=true;pstat={};fights=[];pending=[];renderAppr();DOORK.forEach(k=>applyDoor(k,0));RHF.run=RHF.hide=RHF.fight=0;moveOrder=null;moveEver=false;ADM.multi.clear();ADM.mp.clear();escorts=[];esCar=null;npcs=[];fires=[];logs=[];evTimes=[];msns=[];roster.clear();phase='wait';t0=0;tEnd=0;fireStart=0;fireOut=0;ADM.sel=null;ADM.ctl=false;banner='';bannerSeq++;nid=1;setTab('ctl')}
+function resetAll(){cineIv=[];cineOpen=0;incT=0;arrT=0;execAt={};ADM.manual={};hostages=[];intro=null;npcCleared=true;pstat={};fights=[];pending=[];renderAppr();DOORK.forEach(k=>applyDoor(k,0));RHF.run=RHF.hide=RHF.fight=0;moveOrder=null;moveEver=false;ADM.multi.clear();ADM.mp.clear();escorts=[];esCar=null;npcs=[];fires=[];logs=[];evTimes=[];msns=[];roster.clear();phase='wait';t0=0;tEnd=0;fireStart=0;fireOut=0;ADM.sel=null;ADM.ctl=false;banner='';bannerSeq++;nid=1;setTab('ctl')}
 
 /* ===== admin UI ===== */
 function startAdmin(){
  mode='admin';document.body.classList.add('isadm');$('lobby').hidden=true;$('adm').hidden=false;$('hud').hidden=false;['who','missions','btnAct','btnChat','banner'].forEach(i=>$(i).hidden=true);camPitch=1.0;camDist=22;camT.x=0;camT.z=8;ADM.tx=0;ADM.tz=8;
  if(!npcs.length){addNpc('visitor','lobby');addNpc('visitor','lobby');addNpc('relative','lobby');addNpc('patient','lobby');addNpc('elder','lobby');addNpc('bed','ward');addNpc('bed','ward');addNpc('patient','ward');addNpc('staff','pharm');addNpc('janitor','lobby');addNpc('janitor','ward');addNpc('porter','lobby');addNpc('porter','ward');addNpc('assistant','lobby')}
  if(room)room.presence({adm:1,r:null}).catch(()=>{});
- const tabs=[['ctl','ควบคุม'],['npc','NPC'],['ply','ผู้เล่น'],['plan','เกณฑ์ประเมิน'],['qr','QR เชิญ']];
+ const tabs=[['ctl','ควบคุม'],['npc','NPC'],['ply','ผู้เล่น'],['qr','QR เชิญ']];
  $('tabs').innerHTML='';tabs.forEach(([k,l])=>{const b=document.createElement('button');b.textContent=l;b.dataset.k=k;b.onclick=()=>setTab(k);$('tabs').appendChild(b)});
  const fb=document.createElement('button');fb.id='admFold';fb.textContent='◀ พับ';fb.style.cssText='margin-left:auto;white-space:nowrap;font-weight:500;border-radius:10px;padding:6px 10px;background:var(--paper);border:2px solid var(--line)';fb.onclick=()=>{const f=$('adm').classList.toggle('fold');fb.textContent=f?'▶ ขยาย':'◀ พับ'};$('tabs').appendChild(fb);
  setTab('ctl');
 }
 const selOpts=o=>Object.entries(o).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('');
 const zoneOpts=Object.entries(ZONES).map(([k,v])=>`<option value="${k}">${esc(v[2])}</option>`).join('');
+const ANN_PRE=['ประกาศภาวะฉุกเฉิน รหัสดำ (Code Black) ให้ทุกคนปฏิบัติตามแผนเผชิญเหตุ','มีผู้ก่อเหตุในอาคาร ให้ หนี ซ่อน หรือ สู้ ตามความเหมาะสม','ทุกคนออกจากอาคารไปยังจุดรวมพลที่ปลอดภัย','ปิดประตูห้อง ปิดไฟ และซ่อนตัวอย่างเงียบ','ห้ามเข้าใกล้ทางเข้าหลักของโรงพยาบาล','ตำรวจมาถึงแล้ว ให้ปฏิบัติตามคำสั่งของเจ้าหน้าที่','ผู้ก่อเหตุถูกควบคุมตัวแล้ว สถานการณ์สงบ','ขอให้ผู้บริหารเปิดใช้แผนเผชิญเหตุ'];
+const MSN_PRE=['ตรวจจุดรับผู้ป่วยหน้า ER','ช่วยเคลื่อนย้ายผู้ป่วยติดเตียงไปโซนปลอดภัย','นำประชาชนไปยังจุดรวมพลที่ปลอดภัย','ปฐมพยาบาลผู้บาดเจ็บ','ล็อกประตูห้องและเฝ้าระวัง','ประสานตำรวจและรายงานตำแหน่งผู้ก่อเหตุ','ตรวจนับจำนวนคนที่จุดรวมพล','ผู้นำทีมรายงานสถานการณ์'];
 const roleOpts='<option value="all">ทุกอาชีพ</option>'+Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${esc(v.th)}</option>`).join('');
 function setTab(k){
  ADM.tab=k;[...$('tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.k===k));
@@ -1252,9 +1273,10 @@ function setTab(k){
   <div class="row">${phase==='wait'?'<button class="btn" id="bStart">เริ่มซ้อม</button>':''}${phase==='run'?'<button class="btn sun" id="bPause">พัก</button>':''}${phase==='pause'?'<button class="btn" id="bRes">ซ้อมต่อ</button>':''}${phase==='run'||phase==='pause'?'<button class="btn red" id="bEnd">จบและสรุปผล</button>':''}${phase==='end'?'<button class="btn" id="bSum">ดูสรุปผล</button><button class="btn ghost" id="bFin">ดูฉากจบอีกครั้ง</button><button class="btn ghost" id="bReset">เริ่มรอบใหม่</button>':''}</div>
   <h2>การเข้าร่วมของผู้เล่น</h2><div class="row"><button class="btn sm ${roomOpen?'':'red'}" data-lock="1">${roomOpen?'🔓 เปิดรับผู้เล่นอยู่ (กดเพื่อปิด)':'🔒 ปิดรับผู้เล่นอยู่ (กดเพื่อเปิด)'}</button></div>
   <label class="row" style="gap:8px"><input type="checkbox" id="autoIntro" style="width:20px;height:20px;padding:0" ${ADM.autoIntro?'checked':''}> เมื่อกดเริ่ม ให้เล่นฉากผู้ก่อเหตุเข้ามาทันที</label>
-  <h2>สถานการณ์</h2><div class="row"><button class="btn sm red" data-e="mci">🚑 ผู้บาดเจ็บหมู่</button><button class="btn sm red" data-e="sus">⚠️ ผู้ก่อเหตุบุกเข้ามา (ฉาก)</button><button class="btn sm sun" data-e="evac">🏃 สั่งอพยพ</button><button class="btn sm" data-e="move">🛏️ เคลื่อนย้ายคนไข้</button><button class="btn sm sun" data-e="fight">💪 สั่ง NPC รุมสู้ผู้ก่อเหตุ</button><button class="btn sm ghost" data-e="free">🕊 ปล่อยตัวประกัน</button></div>
-  <h2>ประกาศถึงทุกคน</h2><div class="row"><input id="ann" maxlength="100" placeholder="ข้อความประกาศ" style="flex:1"><button class="btn sm" id="annGo">ส่ง</button></div>
-  <h2>มอบหมายภารกิจ</h2><div class="row"><select id="mTo" style="width:auto">${roleOpts}</select><input id="mTx" maxlength="120" placeholder="เช่น ตรวจจุดรับผู้ป่วยหน้า ER" style="flex:1;min-width:120px"><button class="btn sm" id="mGo">ส่ง</button></div>
+  <h2>สถานการณ์</h2><div class="row"><button class="btn sm red" data-e="sus">⚠️ ผู้ก่อเหตุบุกเข้ามา (ฉาก)</button><button class="btn sm sun" data-e="evac">🏃 สั่งอพยพ</button><button class="btn sm" data-e="move">🛏️ เคลื่อนย้ายคนไข้</button><button class="btn sm sun" data-e="fight">💪 สั่ง NPC รุมสู้ผู้ก่อเหตุ</button><button class="btn sm ghost" data-e="free">🕊 ปล่อยตัวประกัน</button></div>
+  <h2>จุดรวมพล</h2><div class="row"><select id="thr" style="flex:1"><option value="auto">อัตโนมัติ (ตามทิศที่คนร้ายอยู่)</option><option value="E">คนร้ายมาทางขวา → ใช้จุด A (ซ้าย)</option><option value="W">คนร้ายมาทางซ้าย → ใช้จุด B (ขวา)</option></select></div><div class="sub" id="thrNow"></div>
+  <h2>ประกาศถึงทุกคน</h2><div class="row"><select id="ann" style="flex:1"><option value="">— เลือกข้อความประกาศ —</option>${ANN_PRE.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" id="annGo">ส่ง</button></div>
+  <h2>มอบหมายภารกิจ</h2><div class="row"><select id="mTo" style="width:auto">${roleOpts}</select><select id="mTx" style="flex:1;min-width:140px"><option value="">— เลือกภารกิจ —</option>${MSN_PRE.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" id="mGo">ส่ง</button></div>
   <div class="list" id="mList"></div><h2>แชท</h2><div class="list" id="aChat" style="font-size:13px;max-height:120px;overflow-y:auto"></div>`;
   const q=s=>B.querySelector(s);
   q('#bStart')&&(q('#bStart').onclick=()=>setPhase('run'));q('#bPause')&&(q('#bPause').onclick=()=>setPhase('pause'));q('#bRes')&&(q('#bRes').onclick=()=>setPhase('run'));q('#bEnd')&&(q('#bEnd').onclick=()=>setPhase('end'));q('#bSum')&&(q('#bSum').onclick=showSummary);q('#bFin')&&(q('#bFin').onclick=playFinale);q('#bReset')&&(q('#bReset').onclick=resetAll);
@@ -1262,6 +1284,7 @@ function setTab(k){
   B.querySelectorAll('[data-lock]').forEach(b=>b.onclick=()=>{roomOpen=!roomOpen;lg('evt','แอดมิน','',roomOpen?'เปิดรับผู้เล่นเข้าห้อง':'ปิดรับผู้เล่นเข้าห้อง');const pk=npcPacket();if(room)room.emit('st',pk).catch(()=>{});toast(roomOpen?'เปิดรับผู้เล่นแล้ว':'ปิดรับผู้เล่นแล้ว (คนที่อยู่ในห้องยังเล่นต่อได้)',3000);setTab('ctl')});
   B.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>evt(b.dataset.e));
   q('#annGo').onclick=()=>{const v=q('#ann').value.trim();if(v){setBanner(v);q('#ann').value=''}};
+  {const th=q('#thr');th.value=ADM.threat||'auto';const nw=()=>{q('#thrNow').textContent='ตอนนี้จุดที่ปลอดภัยคือ จุดรวมพล '+'AB'[asmSide]+' (วงสีเขียว) · อีกจุดเป็นวงสีแดง'};nw();th.onchange=()=>{ADM.threat=th.value;updThreat();nw()}}
   q('#mGo').onclick=()=>{const v=q('#mTx').value.trim();if(!v)return;const to=q('#mTo').value;msns.push({id:mid++,to,txt:v,t:Date.now(),acks:{}});lg('msn','แอดมิน',to==='all'?'ทุกอาชีพ':ROLES[to].th,'มอบภารกิจ: '+v);q('#mTx').value='';refreshLists()};
  }else if(k==='npc'){
   const n=npcs.find(q=>q.id===ADM.sel);
@@ -1382,14 +1405,14 @@ const PLAN_DEF=[
  {id:'m1',kind:'manual',name:'ใช้ถ้อยคำ/รหัสประกาศตรงตามแผนของโรงพยาบาล',on:1},
  {id:'m2',kind:'manual',name:'ผู้นำทีมสื่อสารและมอบหมายงานชัดเจน',on:1}];
 let PLAN=null;
-function loadPlan(){if(PLAN)return PLAN;try{const j=JSON.parse(localStorage.getItem('plan_v1')||'null');if(Array.isArray(j)&&j.length){PLAN=j;return PLAN}}catch(e){}PLAN=JSON.parse(JSON.stringify(PLAN_DEF));return PLAN}
+function loadPlan(){if(PLAN)return PLAN;PLAN=JSON.parse(JSON.stringify(PLAN_DEF)).filter(i=>i.kind!=='manual');return PLAN;try{const j=JSON.parse(localStorage.getItem('plan_v1')||'null');if(Array.isArray(j)&&j.length){PLAN=j;return PLAN}}catch(e){}PLAN=JSON.parse(JSON.stringify(PLAN_DEF));return PLAN}
 function savePlan(){try{localStorage.setItem('plan_v1',JSON.stringify(PLAN))}catch(e){}}
 ADM.manual={};
 function planCheck(){
- const r=[],base=incT||evTimes[0]||t0,el=x=>x?Math.max(0,Math.round((x-base)/1000)):null;
+ const r=[],base=incT||evTimes[0]||t0,el=x=>x?Math.max(0,Math.round((adj(x)-adj(base))/1000)):null;
  const civ=npcs.filter(n=>!n.gone&&CIV.includes(n.tp)&&n.tp!=='suspect'),med=npcs.filter(n=>!n.gone&&NT[n.tp].need==='med');
  let ma=0,mb=0;for(const m of msns){const e2=[...roster.entries()].filter(([id,rr])=>m.to==='all'||m.to===rr.r);mb+=e2.length;for(const [id] of e2)if(m.acks[id])ma++}
- for(const it of loadPlan().filter(i=>i.on)){
+ for(const it of loadPlan().filter(i=>i.on&&i.kind!=='manual')){
   let res='na',val='';
   const T=+it.target||0;
   if(it.kind==='announce'){const v=el(execAt.any);if(v===null){res='fail';val='ยังไม่มีการประกาศ/สั่งการ'}else{res=v<=T?'pass':'fail';val=v+' วินาที (เป้า ≤'+T+')'}}
@@ -1443,7 +1466,7 @@ async function exportPdf(){
 }
 $('sumPdf').onclick=exportPdf;
 function compute(){
- const dur=(tEnd||Date.now())-(t0||Date.now());const evs=evTimes[0]||t0;
+ const dur=adj(tEnd||Date.now())-adj(t0||Date.now());const evs=evTimes[0]||t0;
  const med=npcs.filter(n=>NT[n.tp].need==='med'),sus=npcs.filter(n=>n.tp==='suspect'),evn=npcs.filter(n=>n.ev||(n.fl&4));
  const pct=(a,b)=>b?Math.round(a/b*100):null;
  const cats=[];
@@ -1453,12 +1476,12 @@ function compute(){
  if(moveEver)add('เคลื่อนย้ายคนไข้ไปโซนปลอดภัย',med.filter(n=>n.fl&4).length,med.length);
  add('จับกุมผู้ก่อเหตุ',sus.filter(n=>n.fl&8).length,sus.length);
  add('อพยพประชาชนถึงจุดรวมพล',evn.filter(n=>n.fl&4).length,evn.length);
- let ma=0,mb=0,lat=[];for(const m of msns){const el=[...roster.entries()].filter(([id,r])=>m.to==='all'||m.to===r.r);mb+=el.length;for(const [id] of el)if(m.acks[id]){ma++;lat.push(m.acks[id]-m.t)}}
+ let ma=0,mb=0,lat=[];for(const m of msns){const el=[...roster.entries()].filter(([id,r])=>m.to==='all'||m.to===r.r);mb+=el.length;for(const [id] of el)if(m.acks[id]){ma++;lat.push(adj(m.acks[id])-adj(m.t))}}
  add('รับทราบภารกิจ',ma,mb);
  if(fireStart)add('ดับเพลิง',fires.length?0:1,1);
  const overall=cats.length?Math.round(cats.reduce((s,c)=>s+c.p,0)/cats.length):null;
  const roles=Object.keys(ROLES).map(k=>{const ps=[...roster.values()].filter(r=>r.r===k);const L=logs.filter(l=>l.role===ROLES[k].th&&(l.k==='act'||l.k==='miss'));const okL=L.filter(l=>l.k==='act');
-  return {k,th:ROLES[k].th,n:ps.length,ok:okL.length,miss:L.length-okL.length,first:okL.length?Math.round((okL[0].t-evs)/1000):null}}).filter(r=>r.n);
+  return {k,th:ROLES[k].th,n:ps.length,ok:okL.length,miss:L.length-okL.length,first:okL.length?Math.round((adj(okL[0].t)-adj(evs))/1000):null}}).filter(r=>r.n);
  const obs=[];
  roles.forEach(r=>{if(!r.ok)obs.push('บทบาท'+r.th+'ยังไม่มีการปฏิบัติหน้าที่ที่ได้ผลเลย')});
  cats.filter(c=>c.p<60).forEach(c=>obs.push('ควรปรับปรุง: '+c.k+' ทำได้ '+c.a+' จาก '+c.b));
@@ -1469,15 +1492,32 @@ function compute(){
  const plan=planCheck();plan.items.filter(x=>x.res==='fail'&&x.kind!=='manual').forEach(x=>obs.push('ตามแผน: ยังไม่ผ่านเกณฑ์ "'+x.name+'" — '+x.val));
  return {dur,cats,overall,roles,obs,players:roster.size,plan};
 }
+/* ---- วิเคราะห์และสรุปผลอัตโนมัติ ---- */
+const PLAN_ADV={announce:'ซ้อมการประกาศ/สั่งการภาวะฉุกเฉินให้เร็วขึ้น กำหนดผู้มีหน้าที่ประกาศและข้อความมาตรฐานล่วงหน้า',planopen:'ผู้บริหารควรตัดสินใจเปิดใช้แผนเผชิญเหตุให้เร็วขึ้น กำหนดเงื่อนไขและผู้มีอำนาจสั่งให้ชัด',arrest:'ทบทวนการประสานตำรวจและการควบคุมตัวผู้ก่อเหตุ ให้ชัดว่าใครสั่ง ใครเข้าควบคุม',evac:'ฝึกการนำประชาชนไปยังที่ปลอดภัย (หนี/ซ่อน) และการประกาศบอกทิศทางหนี',move:'วางแผนเส้นทางและทีมเคลื่อนย้ายผู้ป่วยติดเตียงล่วงหน้า',ack:'กำชับให้ทุกตำแหน่งตอบรับคำสั่งทันที และตรวจสอบช่องทางสื่อสาร',nohostage:'ซ้อมขั้นตอนเจรจาและช่วยตัวประกัน ไม่ให้มีผู้ค้างอยู่กับผู้ก่อเหตุ'};
+function aiSummary(c){
+ const good=[],bad=[],adv=[];
+ const g=c.overall===null?null:c.overall>=80?'อยู่ในระดับดีมาก':c.overall>=60?'อยู่ในระดับดี':'ยังต้องปรับปรุงอย่างมาก';
+ const head=c.overall===null?'ข้อมูลยังไม่พอสำหรับประเมิน (ยังไม่มีภารกิจที่วัดผลได้)':'โดยรวมการซ้อมครั้งนี้ได้ '+c.overall+'% '+g+' ใช้เวลา '+fmt(c.dur)+' นาที มีผู้เข้าร่วม '+c.players+' คน';
+ c.cats.forEach(x=>{if(x.p>=80)good.push(x.k+' ทำได้ดี ('+x.a+'/'+x.b+')');else if(x.p<60){bad.push(x.k+' ทำได้เพียง '+x.a+' จาก '+x.b+' ('+x.p+'%)')}});
+ c.plan.items.forEach(x=>{if(x.res==='pass')good.push('ผ่านเกณฑ์แผน: '+x.name+' — '+x.val);else if(x.res==='fail'){bad.push('ไม่ผ่านเกณฑ์แผน: '+x.name+' — '+x.val);if(PLAN_ADV[x.kind]&&!adv.includes(PLAN_ADV[x.kind]))adv.push(PLAN_ADV[x.kind])}});
+ const idle=c.roles.filter(r=>!r.ok);if(idle.length){bad.push('บทบาทที่ยังไม่ได้ปฏิบัติหน้าที่: '+idle.map(r=>r.th).join(', '));adv.push('ทบทวนหน้าที่ของ'+idle.map(r=>r.th).join(', ')+' ให้แต่ละคนรู้ว่าต้องทำอะไรเมื่อเกิดเหตุ')}
+ const sp=c.roles.filter(r=>r.first!==null).sort((a,b)=>a.first-b.first)[0];if(sp)good.push('บทบาทที่ลงมือเร็วที่สุดคือ'+sp.th+' ('+sp.first+' วินาทีหลังเหตุ)');
+ const w=c.cats.filter(x=>x.p<60).map(x=>x.k);if(w.length)adv.push('ฝึกซ้ำในหัวข้อ: '+w.join(', '));
+ if(!bad.length)adv.push('คงมาตรฐานเดิม และเพิ่มความยากในการซ้อมครั้งถัดไป (เช่น เพิ่มจำนวนผู้ป่วยหรือสถานการณ์ซ้อน)');
+ return {head,good,bad,adv};
+}
+function aiHTML(){const a=aiSummary(compute()),li=l=>l.length?'<ul>'+l.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<p class="sub">-</p>';
+ return '<h2>🤖 สรุปผลและวิเคราะห์อัตโนมัติ</h2><p><b>'+esc(a.head)+'</b></p><h3 style="margin:8px 0 2px">จุดที่ทำได้ดี</h3>'+li(a.good)+'<h3 style="margin:8px 0 2px">จุดที่ควรปรับปรุง</h3>'+li(a.bad)+'<h3 style="margin:8px 0 2px">ข้อเสนอแนะ</h3>'+li(a.adv)}
 function summaryHTML(full){
  const c=compute(),grade=c.overall===null?'-':c.overall>=80?'ดีมาก':c.overall>=60?'ดี':'ควรปรับปรุง';
- let h=`<div class="row"><img src="${LOGO_H}" alt="" style="height:48px;width:48px"><h1 style="margin:0">สรุปผลการซ้อมแผน</h1></div><p class="sub">โรงพยาบาลดอนจาน · ใช้เวลา ${fmt(c.dur)} นาที · ผู้เข้าร่วม ${c.players} คน</p>
+ let h=`<div class="row"><img src="${LOGO_H}" alt="" style="height:48px;width:48px"><h1 style="margin:0">สรุปผลการซ้อมแผน</h1></div><p class="sub">โรงพยาบาลดอนจาน · ใช้เวลา ${fmt(c.dur)} นาที (ไม่นับเวลาฉากวิดีโอ) · ผู้เข้าร่วม ${c.players} คน</p>
  <div class="row"><b style="font-size:34px">${c.overall===null?'-':c.overall+'%'}</b><span class="pill">${grade}</span></div>
+ ${aiHTML()}
  <h2>ผลตามภารกิจ</h2>${c.cats.map(x=>`<div><div class="row" style="justify-content:space-between"><span>${esc(x.k)}</span><b>${x.a}/${x.b}</b></div><div class="bar"><i style="width:${x.p}%"></i></div></div>`).join('')||'<p class="sub">ยังไม่มีข้อมูลภารกิจ</p>'}
- <h2>ผลตามแผนเผชิญเหตุ ${c.plan.pct===null?'':'· ผ่าน '+c.plan.pass+'/'+c.plan.total+' ข้อ ('+c.plan.pct+'%)'}</h2><div class="tw"><table>${c.plan.items.map(x=>`<tr><td style="width:34px">${x.kind==='manual'?`<input type="checkbox" data-man="${x.id}" ${x.res==='pass'?'checked':''} style="width:20px;height:20px">`:x.res==='pass'?'✅':x.res==='fail'?'❌':'➖'}</td><td>${esc(x.name)}</td><td>${esc(x.val)}</td></tr>`).join('')||'<tr><td>ยังไม่ได้ตั้งเกณฑ์</td></tr>'}</table></div>
+ <h2>ผลตามแผนเผชิญเหตุ ${c.plan.pct===null?'':'· ผ่าน '+c.plan.pass+'/'+c.plan.total+' ข้อ ('+c.plan.pct+'%)'}</h2><div class="tw"><table>${c.plan.items.map(x=>`<tr><td style="width:34px">${x.res==='pass'?'✅':x.res==='fail'?'❌':'➖'}</td><td>${esc(x.name)}</td><td>${esc(x.val)}</td></tr>`).join('')||'<tr><td>ยังไม่ได้ตั้งเกณฑ์</td></tr>'}</table></div>
  <h2>ผลตามอาชีพ</h2><div class="tw"><table><tr><th>อาชีพ</th><th>คน</th><th>ทำสำเร็จ</th><th>พลาด</th><th>แรกเริ่ม (วินาที)</th></tr>${c.roles.map(r=>`<tr><td>${esc(r.th)}</td><td>${r.n}</td><td>${r.ok}</td><td>${r.miss}</td><td>${r.first===null?'-':r.first}</td></tr>`).join('')}</table></div>
  <h2>ข้อสังเกตอัตโนมัติ</h2><ul>${c.obs.map(o=>`<li>${esc(o)}</li>`).join('')}</ul>
- <h2>ลำดับเหตุการณ์</h2><div class="tw"><table>${logs.filter(l=>l.k!=='join'||true).slice(full?0:-60).map(l=>`<tr><td>${fmt(l.t-(t0||l.t))}</td><td>${esc(l.who)} ${esc(l.role)}</td><td>${esc(l.d)}</td></tr>`).join('')}</table></div>`;
+ <h2>ลำดับเหตุการณ์</h2><div class="tw"><table>${logs.filter(l=>l.k!=='join'||true).slice(full?0:-60).map(l=>`<tr><td>${fmt(adj(l.t)-adj(t0||l.t))}</td><td>${esc(l.who)} ${esc(l.role)}</td><td>${esc(l.d)}</td></tr>`).join('')}</table></div>`;
  return h;
 }
 function showSummary(){
@@ -1494,7 +1534,7 @@ $('sumExport').onclick=()=>{notes=($('sumNotes')||{}).value||notes;
  const css='body{font-family:sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#1b2a47}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ccd;padding:4px 6px;text-align:left}.bar{height:10px;background:#eef;border-radius:9px}.bar i{display:block;height:100%;background:#10b3a3;border-radius:9px}.row{display:flex;justify-content:space-between;gap:8px}.pill{border:1px solid #ccd;border-radius:9px;padding:1px 8px}';
  saveFile('สรุปผลซ้อมแผน_'+stamp()+'.html','<!doctype html><meta charset="utf-8"><style>'+css+'</style>'+summaryHTML()+'<h2>บันทึกของผู้ประเมิน</h2><p>'+esc(notes).replace(/\n/g,'<br>')+'</p>')};
 $('sumCsv').onclick=()=>{const q=s=>'"'+String(s).replace(/"/g,'""')+'"';
- saveFile('log-ซ้อมแผน_'+stamp()+'.csv','﻿เวลา,ประเภท,ผู้ใช้,อาชีพ,รายละเอียด,สำเร็จ\n'+logs.map(l=>[fmt(l.t-(t0||l.t)),l.k,l.who,l.role,l.d,l.ok].map(q).join(',')).join('\n'))};
+ saveFile('log-ซ้อมแผน_'+stamp()+'.csv','﻿เวลา,ประเภท,ผู้ใช้,อาชีพ,รายละเอียด,สำเร็จ\n'+logs.map(l=>[fmt(adj(l.t)-adj(t0||l.t)),l.k,l.who,l.role,l.d,l.ok].map(q).join(',')).join('\n'))};
 
 
 /* ===== finale cutscene ===== */
