@@ -274,9 +274,9 @@ scene.add(new T.HemisphereLight(0xffffff,0xbfd8a8,0.95));
 const sun=new T.DirectionalLight(0xffffff,0.55);sun.position.set(-20,40,25);scene.add(sun);
 const lam=(c)=>new T.MeshLambertMaterial({color:c});
 function box(w,h,d,c,x,y,z,p){const m=new T.Mesh(new T.BoxGeometry(w,h,d),lam(c));m.position.set(x,y,z);(p||scene).add(m);return m}
-const colliders=[];
+const colliders=[],wallMs=[];
 function _bx(g,w,h,d,c,x,y,z){const m=new T.Mesh(new T.BoxGeometry(w,h,d),lam(c));m.position.set(x,y,z);g.add(m);return m}
-function wall(x1,z1,x2,z2){const th=0.4;let cx=(x1+x2)/2,cz=(z1+z2)/2,w=Math.abs(x2-x1)||th,d=Math.abs(z2-z1)||th;box(w,2.7,d,0xfff4e2,cx,1.35,cz);box(w+.05,.15,d+.05,0x10b3a3,cx,2.7,cz);colliders.push([cx-w/2,cz-d/2,cx+w/2,cz+d/2])}
+function wall(x1,z1,x2,z2){const th=0.4;let cx=(x1+x2)/2,cz=(z1+z2)/2,w=Math.abs(x2-x1)||th,d=Math.abs(z2-z1)||th;wallMs.push(box(w,2.7,d,0xfff4e2,cx,1.35,cz),box(w+.05,.15,d+.05,0x10b3a3,cx,2.7,cz));colliders.push([cx-w/2,cz-d/2,cx+w/2,cz+d/2])}
 function solid(x,z,w,d,h,c){box(w,h,d,c,x,h/2,z);colliders.push([x-w/2,z-d/2,x+w/2,z+d/2])}
 function label(text,x,y,z,sz,bg){const s=mkLabel(text,bg||'#ffffff','#1b2a47');s.position.set(x,y,z);s.scale.multiplyScalar(sz||1);scene.add(s);return s}
 const lcache={};
@@ -325,13 +325,13 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
  wall(-22,0,-8,0);wall(8,-2,22,-2);
  DOORK.forEach(k=>{const x=DOORDEF[k][0],z=DOORDEF[k][1];doorMesh[k]=box(.25,2.4,3.9,0x10b3a3,x,1.2,z+3.7);box(.3,.1,3.9,0xffc93c,0,2.3,0,doorMesh[k]);box(.32,.8,1.4,0x9fd8ff,0,.35,0,doorMesh[k]);doorZ[k]=z;doorRect[k]=[x-.15,z-1.95,x+.15,z+1.95]});
  // กรอบประตูทุกห้อง + ประตูหลักหน้า
- DOORK.forEach(k=>{const x=DOORDEF[k][0],z=DOORDEF[k][1];box(.5,2.7,.3,0xffc93c,x,1.35,z-2.1);box(.5,2.7,.3,0xffc93c,x,1.35,z+2.1);box(.5,.35,4.5,0xffc93c,x,2.55,z)});
- box(.3,2.7,.3,0xffc93c,-3.1,1.35,12);box(.3,2.7,.3,0xffc93c,3.1,1.35,12);box(6.5,.35,.5,0xffc93c,0,2.55,12);
+ DOORK.forEach(k=>{const x=DOORDEF[k][0],z=DOORDEF[k][1];box(.5,2.7,.3,0xffc93c,x,1.35,z-2.1);box(.5,2.7,.3,0xffc93c,x,1.35,z+2.1);wallMs.push(box(.5,.35,4.5,0xffc93c,x,2.55,z))});
+ box(.3,2.7,.3,0xffc93c,-3.1,1.35,12);box(.3,2.7,.3,0xffc93c,3.1,1.35,12);wallMs.push(box(6.5,.35,.5,0xffc93c,0,2.55,12));
  // room floors
  box(14,.04,12,0x7fa9c4,-15,.05,-6);box(14,.04,12,0x7fb596,-15,.05,6);box(14,.04,10,0xc4a77a,15,.05,-7);box(14,.04,14,0x9a8fc4,15,.05,5);box(16,.04,24,0xc9b98a,0,.05,0);
  label('ห้องฉุกเฉิน (ER)',-15,3.6,-10,1,'#ffd3cf');label('ผู้ป่วยใน',-15,3.6,10,1,'#d8f5e3');label('OPD / โถงต้อนรับ',0,3.6,-10,1,'#fff0b8');label('ห้องยา',15,3.6,-10.5,1,'#dcd3ff');label('สำนักงาน',15,3.6,10,1,'#d6e6ff');label('ลาน EMS',-29,3.2,-4,1,'#ffd3cf');
  // sign
- box(12,1.4,.4,0xffffff,0,3.8,12.2);label('โรงพยาบาลดอนจาน',0,4.0,13,1.5,'#10b3a3');
+ wallMs.push(box(12,1.4,.4,0xffffff,0,3.8,12.2));label('โรงพยาบาลดอนจาน',0,4.0,13,1.5,'#10b3a3');
  {const tx=new T.TextureLoader().load(LOGO_H);const lm=new T.Mesh(new T.PlaneGeometry(3.4,3.4),new T.MeshBasicMaterial({map:tx,transparent:true}));lm.position.set(-9,5.6,12.45);scene.add(lm);const lm2=new T.Mesh(new T.PlaneGeometry(3.4,3.4),new T.MeshBasicMaterial({map:tx,transparent:true}));lm2.position.set(9,5.6,12.45);scene.add(lm2)}
  // ป้อมยามหน้าทางเข้า
  solid(17.8,25.3,2.6,2.4,2.4,0xf3f0e6);box(3.1,.25,2.9,0x2f6fd0,17.8,2.55,25.3);box(.06,.9,1.3,0x9fd8ff,16.46,1.55,25.3);box(.9,1.7,.06,0x8a5a2b,18.4,.85,24.08);label('ป้อมยาม',17.8,3.5,25.3,1,'#ffffff');
@@ -522,11 +522,11 @@ function showMenu(items,cb){
 
 /* applying world state */
 const ST_POSE={2:'sit',3:'lie',7:'lie'};
-let carTarget=null,carV=null;
+let carTarget=null,carV=null,wallsHid=false;
 function applySt(d){
  if(d.p&&d.p!==phase){phase=d.p;sfxPhase(d.p);if(mode==='player'){if(phase==='end')playFinale();else{if(fin.on)endFinale(true);toast(phase==='run'?'เริ่มการซ้อม':phase==='pause'?'พักการซ้อม':'รอเริ่มการซ้อม')}}}
  if(mode==='player'&&d.bi!==undefined&&d.bi!==bannerId){bannerId=d.bi;if(d.b){sfx('alarm');const b=$('banner');b.textContent=d.b;b.hidden=false;clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>b.hidden=true,14000)}}
- if(d.k!==undefined){const on=!!d.k;if(on&&!cine){cineP=null;cineOff=false}if(!on)cineOff=false;cine=on?{x:d.k[0],z:d.k[1]}:null;if(on)$('cinecap').textContent=d.k[2]?'⚔ ร่วมแรงจับกุมผู้ก่อเหตุ':'⚠ เหตุการณ์ผิดปกติที่ทางเข้าโรงพยาบาล'}
+ if(d.k!==undefined){const on=!!d.k;if(on&&!cine){cineP=null;cineOff=false}if(!on)cineOff=false;cine=on?{x:d.k[0],z:d.k[1],f:d.k[2]||0}:null;if(on)$('cinecap').textContent=d.k[2]?'⚔ ร่วมแรงจับกุมผู้ก่อเหตุ':'⚠ เหตุการณ์ผิดปกติที่ทางเข้าโรงพยาบาล'}
  if(d.a!==undefined&&d.a!==asmSide){setAsmSide(d.a);if(mode==='player')toast('จุดรวมพลที่ปลอดภัยตอนนี้คือ จุด '+'AB'[asmSide],4000)}
  if(d.o!==undefined){const L=d.o===0;if(L!==roomLocked){roomLocked=L;updLock()}}
  if(!d.n)return;
@@ -722,13 +722,14 @@ function frame(now){
  const tx=lobbyShown?Math.sin(t*.1)*10:camT.x,tz=lobbyShown?4:camT.z;
  const yaw=lobbyShown?t*.12:camYaw,d=lobbyShown?26:camDist,pc=lobbyShown?.7:camPitch;
  if(!fin.on&&cine&&!cineOff){
-  const tx2=cine.x-9+Math.sin(t*.3)*1.2,tz2=cine.z+6.5;
+  const cf=cine.f,tx2=cine.x-(cf?4.5:9)+Math.sin(t*.3)*(cf?.7:1.2),tz2=cine.z+(cf?4.8:6.5);
   if(!cineP)cineP={x:camera.position.x,y:camera.position.y,z:camera.position.z};
-  const kk=Math.min(1,dt*2.5);cineP.x+=(tx2-cineP.x)*kk;cineP.y+=(4.6-cineP.y)*kk;cineP.z+=(tz2-cineP.z)*kk;
-  camera.position.set(cineP.x,cineP.y,cineP.z);camera.lookAt(cine.x,1.3,cine.z)}
+  const kk=Math.min(1,dt*2.5);cineP.x+=(tx2-cineP.x)*kk;cineP.y+=((cf?3:4.6)-cineP.y)*kk;cineP.z+=(tz2-cineP.z)*kk;
+  camera.position.set(cineP.x,cineP.y,cineP.z);camera.lookAt(cine.x,cf?1:1.3,cine.z)}
  else if(!fin.on){camera.position.set(tx+Math.sin(yaw)*Math.cos(pc)*d,Math.sin(pc)*d+1,tz+Math.cos(yaw)*Math.cos(pc)*d);
  camera.lookAt(tx,1,tz)}
  if((camUITick=(camUITick||0)+1)%20===0)syncCam();
+ {const wh=!!((cine&&!cineOff&&cine.f)||fin.on);if(wh!==wallsHid){wallsHid=wh;wallMs.forEach(m=>m.visible=!wh);DOORK.forEach(k=>{if(doorMesh[k])doorMesh[k].visible=!wh})}}
  {const sh=!!(cine&&!cineOff&&!fin.on);if(sh!==cineShown){cineShown=sh;$('cine').hidden=!sh}}
  renderer.render(scene,camera);
 }
@@ -943,7 +944,10 @@ function moveTick(dt){
  for(const s of npcs){
   if(!s.job)continue;
   const t=npcs.find(q=>q.id===s.job.t);
-  if(!t||t.gone){s.job=null;s.mode='wander';s.st=0;continue}
+  s.job.age=(s.job.age||0)+dt;
+  if(!t||t.gone||(t.fl&(8|524288))||s.job.age>60){
+   if(t&&!t.gone){t.carried=0;t.claim=0;if(s.job.ph==='push'&&s.job.age>60){const p=asmPt();t.x=p[0];t.z=p[1];t.fl|=4;t.st=s.job.lie?3:0;t.mode='still'}else if(t.st===7)t.st=3}
+   s.job=null;s.mode='wander';s.st=0;s.route=[];s.tx=null;s.claim=0;continue}
   if(s.job.ph==='go'){
    if(Math.hypot(s.x-t.x,s.z-t.z)<1.8){
     s.job.ph='push';t.carried=s.id;const lie=t.tp==='bed'||t.tp==='injured'||t.st===3;s.job.lie=lie;
@@ -1072,7 +1076,9 @@ function startFight(who){
  const ox=who.npc?who.npc.x:who.x,oz=who.npc?who.npc.z:who.z;
  const f={s,ph:'gather',t:0,tm:0,fs:[],peer:who.peer||null,police:null,go:0};
  if(who.npc)f.fs.push(who.npc);
- const helpers=npcs.filter(q=>!q.gone&&q!==who.npc&&canCmd(q)&&FLEE.includes(q.tp)&&q.st!==3&&!(q.fl&4)&&!q.job&&!q.claim&&Math.hypot(q.x-s.x,q.z-s.z)<14).sort((a,b)=>Math.hypot(a.x-s.x,a.z-s.z)-Math.hypot(b.x-s.x,b.z-s.z)).slice(0,who.npc?2:3);
+ const helpers=npcs.filter(q=>!q.gone&&q!==who.npc&&canCmd(q)&&FLEE.includes(q.tp)&&q.st!==3&&!(q.fl&(4|524288))&&!q.job&&!q.claim).sort((a,b)=>Math.hypot(a.x-s.x,a.z-s.z)-Math.hypot(b.x-s.x,b.z-s.z)).slice(0,who.npc?2:3);
+ const needH=who.npc?1:2;
+ while(helpers.length<needH){const e=addNpc('staff','entr');e.sp2=0;helpers.push(e)}
  f.fs.push(...helpers);
  f.fs.forEach(q=>{q.fighting=1;q.job=null;q.hold=0;q.tx=null;q.fl&=~(64|128|256);q.route=[];sendTo(q,s.x+rnd(-1.4,1.4),s.z+rnd(-1.4,1.4),4)});
  releaseHostages(s);s.fightLock=1;s.mode='still';s.route=[];s.tx=null;s.st=0;
@@ -1099,7 +1105,8 @@ function fightTick(dt){
    if(f.peer&&room){const p=room.peers().find(r=>r.peer===f.peer);
     if(p&&p.presence&&Math.hypot(p.presence.x-s.x,p.presence.z-s.z)<2.8){pl=true;if(!f.pfx){f.pfx=1;emit('cmd',{to:f.peer,t:'fx',x:s.x+1.1,z:s.z,ry:-Math.PI/2,ms:7200})}}
     else if(!p)f.peer=null;}
-   if(there>0||pl||f.t>9){f.ph='fight';f.tm=0;s.fl=(s.fl&~512)|8192;
+   const need=Math.min(2,f.fs.filter(q=>!q.gone).length);
+   if(there>=need||f.t>10){f.ph='fight';f.tm=0;s.fl=(s.fl&~512)|8192;
     if(f.peer&&!f.pfx){f.pfx=1;emit('cmd',{to:f.peer,t:'fx',x:s.x+1.1,z:s.z,ry:-Math.PI/2,ms:7000})}
     f.fs.forEach(q=>{if(!q.gone&&q.route.length===0){q.fl|=4096}});}
   }else if(f.ph==='fight'){
@@ -1153,8 +1160,13 @@ function autoEndCheck(){
  setTimeout(()=>{if(phase==='run'&&!npcs.some(q=>q.tp==='suspect'&&!q.gone))setPhase('end')},3500);
 }
 function escortTick(dt){
+ if(esCar&&esCar.ph==='park'&&(!escorts.length||phase==='end')){esCar.pk=(esCar.pk||0)+dt;if(esCar.pk>(phase==='end'?1:5)){esCar.ph='out';esCar.wp=CAR_OUT;esCar.i=0;esCar.v=1;esCar.done=false;esCar.pk=0}}
  for(const e of escorts.slice()){
+  if(!npcs.includes(e.s)||e.s.gone||e.o.gone){escorts.splice(escorts.indexOf(e),1);continue}
   if(e.s.fightLock)continue;
+  e.age=(e.age||0)+dt;
+  if(e.ph==='go'&&e.age>40){e.o.x=e.s.x+1;e.o.z=e.s.z;e.o.route=[]}
+  if(e.ph==='lead'){e.lt=(e.lt||0)+dt;if(e.lt>35&&esCar&&esCar.ph==='park'){e.o.route=[];e.s.route=[];e.o.x=e.s.x=9.8;e.o.z=e.s.z=21.3}}
   if(e.ph==='go'){const d=Math.hypot(e.o.x-e.s.x,e.o.z-e.s.z);
    if(d<1.5){e.ph='lead';e.o.route=routeTo(e.o.x,e.o.z,9.8,20.2);e.s.route=routeTo(e.s.x,e.s.z,9.8,22.4);e.o.mode=e.s.mode='route';e.o.st=e.s.st=6}
    else if(!e.o.route.length){e.o.route=routeTo(e.o.x,e.o.z,e.s.x,e.s.z);e.o.mode='route';e.o.st=4}}
