@@ -248,17 +248,24 @@ const ROLES={
 const LOOKS=[{skin:0xf2c29b,hair:0x2b1d14,n:'ผู้ชาย',f:0},{skin:0xf7cfb0,hair:0x4a2c1a,n:'ผู้หญิง',f:1}];
 const NT={patient:{th:'ผู้ป่วย',need:'med'},elder:{th:'ผู้สูงอายุ',need:'med'},bed:{th:'ผู้ป่วยใน',need:'med'},visitor:{th:'ประชาชน',need:''},relative:{th:'ญาติ',need:''},injured:{th:'ผู้บาดเจ็บ',need:'med'},suspect:{th:'ผู้ก่อเหตุ',need:'arrest'},staff:{th:'เจ้าหน้าที่',need:''},janitor:{th:'แม่บ้าน',need:''},police:{th:'ตำรวจ',need:''},guard:{th:'รปภ.',need:''},doctor:{th:'แพทย์',need:''},nurse:{th:'พยาบาล',need:''},porter:{th:'พนักงานเปล',need:''},assistant:{th:'ผู้ช่วยเหลือคนไข้',need:''}};
 const NTK=Object.keys(NT);
-const ZONES={er:[-15,-9,'ER'],ward:[-15,6,'ผู้ป่วยใน'],lobby:[0,-2,'OPD/โถง'],pharm:[15,-11,'ห้องยา'],admin:[15,5,'สำนักงาน'],entr:[0,17,'หน้าโรงพยาบาล'],get assembly(){const b=ASMP[asmSide];return [b[0],b[1],'จุดรวมพล '+'AB'[asmSide]]},bay:[-30,3,'ลาน EMS']};
-const RECT={er:[-22,-22,-8,0],ward:[-22,0,-8,12],lobby:[-8,-22,8,12],pharm:[8,-22,22,-2],admin:[8,-2,22,12]};
-const DOORS={'er-lobby':[-8,-6],'ward-lobby':[-8,6],'pharm-lobby':[8,-6],'admin-lobby':[8,6],'lobby-out':[0,12.6],'er-out':[-22.6,-4]};
-const NB={er:['lobby','out'],ward:['lobby'],pharm:['lobby'],admin:['lobby'],lobby:['er','ward','pharm','admin','out'],out:['lobby','er']};
+const ZONES={er:[-16,-1,'ER'],ward:[40,-1,'IPD ผู้ป่วยใน'],lobby:[0,-2,'OPD/โถง'],pharm:[15,-8,'ห้องยา'],admin:[15,6,'บริหาร/สำนักงาน'],entr:[0,17,'หน้าโรงพยาบาล'],get assembly(){const b=ASMP[asmSide];return [b[0],b[1],'จุดรวมพล '+'AB'[asmSide]]},bay:[-50,-2,'ลาน EMS']};
+const RECT={er:[-24,-14,-9,12],ward:[21,-14,58,12],lobby:[-9,-14,9,12],pharm:[9,-14,21,-1],admin:[9,-1,21,12]};
+const DOORS={'er-lobby':[-9,-6],'pharm-lobby':[9,-7],'admin-lobby':[9,6],'lobby-out':[0,12.6],'er-out':[-24.6,-2],'ward-out':[40,12.6]};
+const NB={er:['lobby','out'],ward:['out'],pharm:['lobby'],admin:['lobby'],lobby:['er','pharm','admin','out'],out:['lobby','er','ward']};
 const doorOf=(a,b)=>DOORS[a+'-'+b]||DOORS[b+'-'+a];
 function zoneOf(x,z){for(const k in RECT){const r=RECT[k];if(x>=r[0]&&x<=r[2]&&z>=r[1]&&z<=r[3])return k}return 'out'}
+function outVia(x,z,tx,tz){
+ if(x<-25&&z<12.3&&tz>=12.3&&tx>=-25)return [[-28,15]];
+ if(tx<-25&&tz<12.3&&z>=12.3&&x>=-25)return [[-28,15]];
+ if(x>59&&z<12.3&&tz>=12.3&&tx<=59)return [[62,15]];
+ if(tx>59&&tz<12.3&&z>=12.3&&x<=59)return [[62,15]];
+ return []}
 function routeTo(x,z,tx,tz){
- const a=zoneOf(x,z),b=zoneOf(tx,tz);if(a===b)return [[tx,tz]];
+ const a=zoneOf(x,z),b=zoneOf(tx,tz);if(a===b){return a==='out'?[...outVia(x,z,tx,tz),[tx,tz]]:[[tx,tz]]}
  const q=[[a]],seen={[a]:1};let path=null;
  while(q.length){const p=q.shift(),l=p[p.length-1];if(l===b){path=p;break}for(const n of NB[l]){if(!seen[n]&&!(doorState[l+'-'+n]||doorState[n+'-'+l])){seen[n]=1;q.push(p.concat(n))}}}
- const pts=[];if(path)for(let i=0;i<path.length-1;i++){const d=doorOf(path[i],path[i+1]);if(d){const bay=d===DOORS['er-out'];if(bay&&path[i]==='out'&&z>6)pts.push([-26,15]);pts.push([d[0],d[1]]);if(bay&&path[i]==='er'&&tz>6)pts.push([-26,15])}}
+ const pts=[];if(path)for(let i=0;i<path.length-1;i++){const d=doorOf(path[i],path[i+1]);if(d){const bay=d===DOORS['er-out'];if(bay&&path[i]==='out'&&z>6)pts.push([-28,15]);pts.push([d[0],d[1]]);if(bay&&path[i]==='er'&&tz>6)pts.push([-28,15])}}
+ {const lp=pts.length?pts[pts.length-1]:[x,z];pts.push(...outVia(lp[0],lp[1],tx,tz))}
  pts.push([tx,tz]);return pts;
 }
 
@@ -296,63 +303,97 @@ function emojiSprite(e){
  if(!m){const c=document.createElement('canvas');c.width=c.height=96;const g=c.getContext('2d');g.font='64px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(e,48,52);m=new T.SpriteMaterial({map:new T.CanvasTexture(c),depthTest:false,transparent:true});lcache[k]=m}
  const s=new T.Sprite(m);s.scale.set(.9,.9,1);s.renderOrder=10;return s}
 
-let asmSide=0;const ASMP=[[-14,29],[38,29]],asmCirc=[];
+let asmSide=0;const ASMP=[[40,28],[-8,28]],asmCirc=[];
 function asmPt(){const b=ASMP[asmSide];return [b[0]+rnd(-5,5),b[1]+rnd(-3,5)]}
-function setAsmSide(v){asmSide=v?1:0;asmCirc.forEach((m,i)=>{try{m.material.color.setHex(i===asmSide?0x3ddc84:0xe5484d)}catch(e){}})}
-const DOORDEF={'er-lobby':[-8,-6],'ward-lobby':[-8,6],'pharm-lobby':[8,-6],'admin-lobby':[8,6],'er-ems':[-22,-4]};
-const DOORK=Object.keys(DOORDEF),doorState={},doorMesh={},doorZ={},doorRect={},closedDoors=[];
-function applyDoor(k,c){c=c?1:0;if(doorState[k]===c)return;if(doorState[k]!==undefined&&typeof sfx==='function'){const r=doorRect[k];sfx('door',{x:r[0],z:(r[1]+r[3])/2})}doorState[k]=c;const r=doorRect[k],i=closedDoors.indexOf(r);if(c&&i<0)closedDoors.push(r);if(!c&&i>=0)closedDoors.splice(i,1)}
-function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;const tz=doorZ[k]+(doorState[k]?0:3.7);m.position.z+=(tz-m.position.z)*Math.min(1,dt*5)}}
+const asmLab=[];
+function setAsmSide(v){asmSide=v?1:0;asmCirc.forEach((m,i)=>{try{m.material.color.setHex(i===asmSide?0x3ddc84:0xe5484d)}catch(e){}});
+ if(typeof scene==='undefined')return;
+ ASMP.forEach((b,i)=>{if(asmLab[i])scene.remove(asmLab[i]);const ok=i===asmSide;asmLab[i]=label('จุดรวมพล '+'AB'[i]+(ok?' ✔ ปลอดภัย':' ✖ อันตราย'),b[0],3.4,b[1]+7.4,1.2,ok?'#b8f5cf':'#ffc2bd')})}
+const BED=[[26,-9],[30,-9],[34,-9],[38,-9],[42,-9],[46,-9],[50,-9],[54,-9],[26,3],[30,3],[34,3],[46,3],[50,3],[54,3]];
+const DOORDEF={'er-lobby':[-9,-6,'v'],'pharm-lobby':[9,-7,'v'],'admin-lobby':[9,6,'v'],'ward-out':[40,12,'h'],'er-ems':[-24,-2,'v']};
+const DOORK=Object.keys(DOORDEF),doorState={},doorMesh={},doorBase={},doorAx={},doorRect={},closedDoors=[];
+function applyDoor(k,c){c=c?1:0;if(doorState[k]===c)return;if(doorState[k]!==undefined&&typeof sfx==='function'){const r=doorRect[k];sfx('door',{x:(r[0]+r[2])/2,z:(r[1]+r[3])/2})}doorState[k]=c;const r=doorRect[k],i=closedDoors.indexOf(r);if(c&&i<0)closedDoors.push(r);if(!c&&i>=0)closedDoors.splice(i,1)}
+function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;const ax=doorAx[k],tg=doorBase[k]+(doorState[k]?0:4.1);m.position[ax]+=(tg-m.position[ax])*Math.min(1,dt*5)}}
 (function build(){
- const gr=box(220,.2,170,0x5fae6a,0,-.1,6);
- box(48,.12,36,0xa89b86,0,0.02,-5);                       // hospital floor
- box(44,.1,10,0x8c97a8,6,0.01,19);                        // forecourt
- box(5,.1,19,0xaab3c0,12,0.02,31.5);box(5,.1,19,0xaab3c0,24,0.02,31.5);          // access roads
- box(5,.1,9,0xaab3c0,60,0.02,36);                          // station driveway
+ const rc=0x6c7685,lw=0xffffff,pc=0xd8d2c4;
+ const pw=(w,d,x,z)=>box(w,.04,d,pc,x,.09,z);
+ box(260,.2,200,0x5fae6a,0,-.1,6);
+ box(84,.12,28,0xa89b86,17,0.02,-1);                       // พื้นอาคาร
+ // ---------- ถนน ----------
+ box(300,.1,9,rc,0,.01,40);                                  // ถนนหลักแนวตะวันออก-ตะวันตก
+ for(let i=-16;i<=16;i++)box(3,.02,.35,lw,i*9,.08,40);
+ box(72,.1,7,rc,-12,.03,16.5);                               // ถนนหน้าอาคาร
+ for(let x=-46;x<22;x+=4)box(2,.02,.25,lw,x,.09,16.5);
+ box(6,.1,26,rc,-42,.03,27);                                 // ถนนทางเข้า (ตะวันตก)
+ for(let z=18;z<38;z+=3.2)box(.2,.02,1.4,lw,-42,.09,z);
+ box(6,.1,24,rc,23,.03,28);                                  // ถนนทางออก (ตะวันออก)
+ for(let z=20;z<38;z+=3.2)box(.2,.02,1.4,lw,23,.09,z);
+ box(35,.08,8,0xb9bcc4,40.5,.04,17);                         // ลานหน้า IPD
+ box(5,.1,9,0xaab3c0,60,.02,36);                             // ทางเข้าสถานีตำรวจ
  box(16,5,9,0xe8eef9,60,2.5,28);box(16.4,.8,9.4,0x1c2d6b,60,5.3,28);box(4,3,.3,0x2b3350,60,1.5,32.6);box(14,.5,.2,0xff4d4d,60,3.9,32.55);
  label('สถานีตำรวจ',60,7.6,32.6,1.6,'#1c2d6b');
- box(220,.1,9,0x6c7685,0,0.01,40);                        // road
- for(let i=-11;i<=11;i++)box(3,.02,.35,0xffffff,i*9,0.08,40);
- // assembly area
+ label('ทางเข้า ⬆',-42,2.8,38.2,1,'#d9f7e3');label('ทางออก ⬇',23,2.8,38.2,1,'#ffe1de');
+ // ---------- ป้อมยาม + ซุ้มทางเข้า ----------
+ solid(-37.8,32.6,2.6,2.4,2.4,0xf3f0e6);box(3.1,.25,2.9,0x2f6fd0,-37.8,2.55,32.6);box(.06,.9,1.3,0x9fd8ff,-39.14,1.55,32.6);box(.9,1.7,.06,0x8a5a2b,-37.2,.85,33.84);label('ป้อมยาม',-37.8,3.5,32.6,1,'#ffffff');
+ box(.3,1.3,.3,0x444b57,-39.3,.65,34.6);box(3,.12,.14,0xe5484d,-40.8,1.25,34.6);
+ [-45.4,-38.6].forEach(x=>box(.35,4.2,.35,0xe8eef9,x,2.1,36.6));box(7.4,.7,.4,0x1c6bb0,-42,4.2,36.6);label('โรงพยาบาลดอนจาน',-42,5.3,36.6,1.1,'#10b3a3');
+ // ---------- โรงจอดรถ ----------
+ box(54,.08,12,0x5d6572,-8,.04,27.8);
+ for(let x=-33;x<=17;x+=3.6){if(Math.abs(x+8)<8)continue;box(.12,.02,4.2,lw,x,.1,24.8),box(.12,.02,4.2,lw,x,.1,30.8)}
+ const pcol=[0xe5484d,0x2f6fd0,0xf2c94c,0xffffff,0x3a3f4b,0x2fa36b,0xb0b6c0,0x8e5bd9],cs=LOW?12:6;
+ for(let x=-31,k=0;x<=15;x+=cs,k++){[24.8,30.8].forEach((z,r)=>{if(Math.abs(x+8)<8)return;const c=pcol[(k*3+r*5)%8];box(1.9,.7,3.8,c,x,.55,z);box(1.7,.55,2.0,0x9fd8ff,x,1.15,z)})}
+ label('ลานจอดรถ',-30,2.6,27.8,1,'#ffffff');
+ // ---------- คลินิกฟ้าใส ----------
+ solid(-62,28,12,8,4,0xf5f1e6);box(12.6,.5,8.6,0x3a9ad9,-62,4.2,28);box(2,2.4,.1,0x8a5a2b,-56.01,1.2,28);box(.1,1.2,3,0x9fd8ff,-56.02,1.8,31);label('คลินิกฟ้าใส',-62,5.6,28,1.2,'#d6efff');
+ pw(8,2.4,-52,30);
+ // ---------- จุดรวมพล A/B ----------
  ASMP.forEach((b,i)=>{const as=new T.Mesh(new T.PlaneGeometry(13,13),lam(0x3ddc84));as.rotation.x=-Math.PI/2;as.position.set(b[0],.13,b[1]);scene.add(as);asmCirc.push(as);
-  [[0,-6.6,13.4,.4],[0,6.6,13.4,.4],[-6.6,0,.4,13],[6.6,0,.4,13]].forEach(e=>box(e[2],.06,e[3],0xffffff,b[0]+e[0],.14,b[1]+e[1]));
-  label('จุดรวมพล '+'AB'[i],b[0],3.4,b[1]+7.4,1.2,'#26a269');
+  [[0,-6.6,13.4,.4],[0,6.6,13.4,.4],[-6.6,0,.4,13],[6.6,0,.4,13]].forEach(e=>box(e[2],.06,e[3],lw,b[0]+e[0],.14,b[1]+e[1]));
   const fl=new T.Mesh(new T.BoxGeometry(.1,3.4,.1),lam(0xffffff));fl.position.set(b[0]+6.9,1.7,b[1]+6.9);scene.add(fl);box(1.4,.8,.05,0x26a269,b[0]+7.6,3.0,b[1]+6.9)});
  setAsmSide(0);
- // walls
- wall(-22,-22,22,-22);wall(22,-22,22,12);
- wall(-22,12,-3,12);wall(3,12,22,12);
- wall(-22,-22,-22,-6);wall(-22,-2,-22,12);
- wall(-8,-22,-8,-8);wall(-8,-4,-8,4);wall(-8,8,-8,12);
- wall(8,-22,8,-8);wall(8,-4,8,4);wall(8,8,8,12);
- wall(-22,0,-8,0);wall(8,-2,22,-2);
- DOORK.forEach(k=>{const x=DOORDEF[k][0],z=DOORDEF[k][1];doorMesh[k]=box(.25,2.4,3.9,0x10b3a3,x,1.2,z+3.7);box(.3,.1,3.9,0xffc93c,0,2.3,0,doorMesh[k]);box(.32,.8,1.4,0x9fd8ff,0,.35,0,doorMesh[k]);doorZ[k]=z;doorRect[k]=[x-.15,z-1.95,x+.15,z+1.95]});
- // กรอบประตูทุกห้อง + ประตูหลักหน้า
- DOORK.forEach(k=>{const x=DOORDEF[k][0],z=DOORDEF[k][1];box(.5,2.7,.3,0xffc93c,x,1.35,z-2.1);box(.5,2.7,.3,0xffc93c,x,1.35,z+2.1);wallMs.push(box(.5,.35,4.5,0xffc93c,x,2.55,z))});
+ // ---------- กำแพง ----------
+ wall(-24,-14,58,-14);wall(58,-14,58,12);                    // เหนือ + ตะวันออก
+ wall(-24,12,-3,12);wall(3,12,38,12);wall(42,12,58,12);      // ใต้ (เว้นประตูหลัก + ประตู IPD)
+ wall(-24,-14,-24,-4);wall(-24,0,-24,12);                    // ตะวันตก (เว้นประตูข้าง ER)
+ wall(-9,-14,-9,-8);wall(-9,-4,-9,12);                       // ER | OPD
+ wall(9,-14,9,-9);wall(9,-5,9,4);wall(9,8,9,12);             // OPD | ห้องยา/บริหาร
+ wall(9,-1,21,-1);                                           // ห้องยา | บริหาร
+ wall(21,-14,21,12);                                         // บริหาร | IPD
+ DOORK.forEach(k=>{const d=DOORDEF[k],x=d[0],z=d[1],v=d[2]==='v';doorAx[k]=v?'z':'x';doorBase[k]=v?z:x;
+  const lf=doorMesh[k]=v?box(.25,2.4,3.9,0x10b3a3,x,1.2,z+4.1):box(3.9,2.4,.25,0x10b3a3,x+4.1,1.2,z);
+  if(v){box(.3,.1,3.9,0xffc93c,0,1.1,0,lf);box(.32,.8,1.4,0x9fd8ff,0,.35,0,lf);doorRect[k]=[x-.15,z-1.95,x+.15,z+1.95];
+   box(.5,2.7,.3,0xffc93c,x,1.35,z-2.1);box(.5,2.7,.3,0xffc93c,x,1.35,z+2.1);wallMs.push(box(.5,.35,4.5,0xffc93c,x,2.55,z))}
+  else{box(3.9,.1,.3,0xffc93c,0,1.1,0,lf);box(1.4,.8,.32,0x9fd8ff,0,.35,0,lf);doorRect[k]=[x-1.95,z-.15,x+1.95,z+.15];
+   box(.3,2.7,.5,0xffc93c,x-2.1,1.35,z);box(.3,2.7,.5,0xffc93c,x+2.1,1.35,z);wallMs.push(box(4.5,.35,.5,0xffc93c,x,2.55,z))}});
  box(.3,2.7,.3,0xffc93c,-3.1,1.35,12);box(.3,2.7,.3,0xffc93c,3.1,1.35,12);wallMs.push(box(6.5,.35,.5,0xffc93c,0,2.55,12));
- // room floors
- box(14,.04,22,0x7fa9c4,-15,.05,-11);box(14,.04,12,0x7fb596,-15,.05,6);box(14,.04,20,0xc4a77a,15,.05,-12);box(14,.04,14,0x9a8fc4,15,.05,5);box(16,.04,34,0xc9b98a,0,.05,-5);
- label('ห้องฉุกเฉิน (ER)',-15,3.6,-19,1,'#ffd3cf');label('ผู้ป่วยใน',-15,3.6,10,1,'#d8f5e3');label('OPD / โถงต้อนรับ',0,3.6,-19,1,'#fff0b8');label('ห้องยา',15,3.6,-19,1,'#dcd3ff');label('สำนักงาน',15,3.6,10,1,'#d6e6ff');label('ลาน EMS',-29,3.2,-4,1,'#ffd3cf');
- // sign
+ // ---------- พื้นห้อง ----------
+ box(15,.04,26,0x7fa9c4,-16.5,.05,-1);box(18,.04,26,0xc9b98a,0,.05,-1);box(12,.04,13,0xc4a77a,15,.05,-7.5);box(12,.04,13,0x9a8fc4,15,.05,5.5);box(37,.04,26,0x7fb596,39.5,.05,-1);
+ label('ห้องฉุกเฉิน (ER)',-16.5,3.6,-12,1,'#ffd3cf');label('OPD / โถงต้อนรับ',0,3.6,-12,1,'#fff0b8');label('ห้องยา',15,3.6,-12,1,'#dcd3ff');label('บริหาร / สำนักงาน',15,3.6,10,1,'#d6e6ff');label('IPD ผู้ป่วยใน',39.5,3.6,-12,1.1,'#d8f5e3');
+ // ---------- ป้ายหน้าอาคาร ----------
  wallMs.push(box(12,1.4,.4,0xffffff,0,3.8,12.2));label('โรงพยาบาลดอนจาน',0,4.0,13,1.5,'#10b3a3');
- {const tx=new T.TextureLoader().load(LOGO_H);const lm=new T.Mesh(new T.PlaneGeometry(3.4,3.4),new T.MeshBasicMaterial({map:tx,transparent:true}));lm.position.set(-9,5.6,12.45);scene.add(lm);const lm2=new T.Mesh(new T.PlaneGeometry(3.4,3.4),new T.MeshBasicMaterial({map:tx,transparent:true}));lm2.position.set(9,5.6,12.45);scene.add(lm2)}
- // ป้อมยามหน้าทางเข้า
- solid(17.8,25.3,2.6,2.4,2.4,0xf3f0e6);box(3.1,.25,2.9,0x2f6fd0,17.8,2.55,25.3);box(.06,.9,1.3,0x9fd8ff,16.46,1.55,25.3);box(.9,1.7,.06,0x8a5a2b,18.4,.85,24.08);label('ป้อมยาม',17.8,3.5,25.3,1,'#ffffff');
- // furniture
- solid(0,-7,8,1,1.2,0x10b3a3);label('ลงทะเบียน',0,2.2,-7,.8);
- for(const x of[-6,-2.5,2.5,6])solid(x,5,1.8,.8,.6,0x7fb2e5);
- for(const x of[-19,-15,-11]){solid(x,-7,1.3,2.3,.7,0xffffff);box(1.3,.08,2.3,0x6db7ff,x,.74,-7)}
- for(const x of[-19,-15,-11])for(const z of[4,9]){solid(x,z,1.3,2.3,.7,0xffffff);box(1.3,.08,2.3,0xbfe9d0,x,.74,z)}
- for(const x of[-19,-15,-11])for(const z of[-14,-18]){solid(x,z,1.3,2.3,.7,0xffffff);box(1.3,.08,2.3,0x6db7ff,x,.74,z)}
- for(const z of[-14,-18])for(const x of[-5,-1.5,1.5,5])solid(x,z,2.2,.8,.6,0x7fb2e5);
- for(const x of[11,15,19])for(const z of[-10.5,-15,-19])solid(x,z,3,.8,2,0xc9a36b);solid(15,-4.5,6,.9,1.1,0x10b3a3);
- for(const x of[11.5,18.5])solid(x,8,2.4,1.2,.9,0xb88958);
- solid(-26,-4,6,3,1.8,0xffffff);box(6,.4,3,0xff6b57,-26,1.9,-4);label('รถ EMS',-26,3.4,-4,.8);
- // ===== ทางเดิน + จุดรวมพล =====
- {const pc=0xd8d2c4,pw=(w,d,x,z)=>box(w,.04,d,pc,x,.09,z);
-  pw(6,12,0,18);pw(6,5,0,26.5);pw(16,3.6,-8,28.2);pw(40,3.6,19,28.2);
-  for(let z=15;z<=27;z+=6){[-3.6,3.6].forEach(x=>{box(.16,3.2,.16,0x4b5563,x,1.6,z);const l=new T.Mesh(new T.SphereGeometry(.28,10,8),new T.MeshBasicMaterial({color:0xfff2b0}));l.position.set(x,3.3,z);scene.add(l)})}
-  }
+ label('ER ห้องฉุกเฉิน',-16.5,3.6,13,1.4,'#ffd3cf');label('IPD ผู้ป่วยใน',49,3.6,13,1.4,'#d8f5e3');label('บริหาร',15,3.6,13,1.2,'#d6e6ff');
+ {const tx=new T.TextureLoader().load(LOGO_H);[[-9,5.6],[9,5.6]].forEach(p=>{const lm=new T.Mesh(new T.PlaneGeometry(3.4,3.4),new T.MeshBasicMaterial({map:tx,transparent:true}));lm.position.set(p[0],p[1],12.45);scene.add(lm)})}
+ // ---------- เฟอร์นิเจอร์ ----------
+ solid(0,-9,8,1,1.2,0x10b3a3);label('ลงทะเบียน',0,2.2,-9,.8);
+ for(const z of[-3,2,7])for(const x of[-6,-3,3,6])solid(x,z,1.8,.8,.6,0x7fb2e5);
+ for(const x of[-21,-17,-13])for(const z of[-11,-6]){solid(x,z,1.3,2.3,.7,0xffffff);box(1.3,.08,2.3,0x6db7ff,x,.74,z)}
+ solid(-16.5,6,7,.9,1.1,0x10b3a3);for(const x of[-21,-12])solid(x,9.5,1.3,2.3,.7,0xffffff);
+ for(const x of[12,15,18])solid(x,-12.5,3,.8,2,0xc9a36b);solid(15,-4,6,.9,1.1,0x10b3a3);
+ for(const x of[12.5,17.5])solid(x,9.5,2.4,1.2,.9,0xb88958);solid(15,2,5,1,.9,0xb88958);
+ BED.forEach(b=>{solid(b[0],b[1],1.3,2.3,.7,0xffffff);box(1.3,.08,2.3,0xbfe9d0,b[0],.74,b[1])});
+ solid(40,-3,12,1,1.1,0x10b3a3);label('เคาน์เตอร์พยาบาล',40,2.2,-3,.8);
+ // ---------- เสาธงชาติ ----------
+ box(.16,9,.16,0xd9dde3,10.5,4.5,14.2);{const sp=new T.Mesh(new T.SphereGeometry(.3,10,8),lam(0xffd45a));sp.position.set(10.5,9.1,14.2);scene.add(sp)}
+ {let y=0;[[0xd32f2f,.28],[0xffffff,.28],[0x1a3a8f,.56],[0xffffff,.28],[0xd32f2f,.28]].forEach(e=>{box(3.3,e[1]+.01,.05,e[0],12.2,8.4-y-e[1]/2,14.2);y+=e[1]})}
+ box(.5,.12,.5,0x9aa3ad,10.5,.15,14.2);
+ // ---------- แฟลตห้องพัก ----------
+ box(36,.1,6,rc,78,.03,17);box(6,.1,20,rc,95,.03,8);
+ solid(108,0,26,14,13,0xe9d9c0);box(26.6,.5,14.6,0xb4533c,108,13.2,0);
+ for(let r=0;r<3;r++)for(let c=0;c<6;c++){box(2,1.5,.1,0x9fd8ff,98+c*4,2.5+r*4,-7.1);box(2,1.5,.1,0x9fd8ff,98+c*4,2.5+r*4,7.1)}
+ box(3,2.6,.12,0x8a5a2b,108,1.3,7.1);label('แฟลตห้องพัก (ห่างจาก IPD ~500 ม.)',108,15.4,0,1.4,'#ffe6b8');
+ // ---------- ทางเดิน + เสาไฟ ----------
+ pw(6,3,0,13.5);pw(4,9,40,17);pw(3,16,-28,15.5);
+ for(let x=-20;x<=52;x+=12){box(.16,3.2,.16,0x4b5563,x,1.6,13.3);const l=new T.Mesh(new T.SphereGeometry(.28,10,8),new T.MeshBasicMaterial({color:0xfff2b0}));l.position.set(x,3.3,13.3);scene.add(l)}
  // ===== ฉากหลัง: แม่น้ำ ภูเขา ทุ่งนา ป่า =====
  {const R=(()=>{let q=11;return()=>{q=(q*16807)%2147483647;return q/2147483647}})();
   box(700,.2,600,0x7cbf84,0,-.25,0);
@@ -368,24 +409,23 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
    const m=new T.Mesh(new T.ConeGeometry(r,h,7),lam(0x628f7d));m.position.set(sd*(128+R()*16),h/2-1,z);scene.add(m)}
   // ทุ่งนา (ทางใต้ของถนน เว้นทางเข้าหลัก)
   const fc=[0xa5d36a,0xc9d65f,0x8fcf6e,0xe0c95a],rows=LOW?2:4;
-  for(let r=0;r<rows;r++)for(let c=0;c<14;c++){const x=-105+c*15;if(x>-14&&x<34)continue;box(13.5,.06,9,fc[(r*3+c)%4],x+7,.06,48+r*10.5)}
-  box(5,.08,45,0xb9a27a,12,.04,64);
+  for(let r=0;r<rows;r++)for(let c=0;c<14;c++){const x=-105+c*15;if(x>-48&&x<26)continue;box(13.5,.06,9,fc[(r*3+c)%4],x+7,.06,50+r*10.5)}
+  box(5,.08,40,0xb9a27a,-42,.04,66);
   [[-40,58],[-75,70],[60,62]].forEach(p=>{box(3.4,2.2,3,0xf1e6cf,p[0],1.1,p[1]);const ro=new T.Mesh(new T.ConeGeometry(3,1.6,4),lam(0xb4533c));ro.position.set(p[0],3,p[1]);ro.rotation.y=Math.PI/4;scene.add(ro)});
   // ป่า (instanced)
   const N=LOW?50:140,dm=new T.Object3D();
   const trunk=new T.InstancedMesh(new T.CylinderGeometry(.3,.4,1.6,6),lam(0x6b4a2b),N),can=new T.InstancedMesh(new T.ConeGeometry(2,5,7),lam(0x2f7d4a),N),can2=new T.InstancedMesh(new T.ConeGeometry(1.5,3.6,7),lam(0x3a9158),N);
   [trunk,can,can2].forEach(m=>{m.frustumCulled=false;scene.add(m)});
   for(let i=0;i<N;i++){let x,z;const k=R();
-   if(k<.4){x=-108+R()*62;z=-34+R()*72}else if(k<.8){x=46+R()*62;z=-34+R()*72}else{x=-100+R()*200;z=-84+R()*24}
+   if(k<.4){x=-135+R()*58;z=-34+R()*72}else if(k<.8){x=122+R()*30;z=-34+R()*72}else{x=-100+R()*200;z=-84+R()*24}
    const sc=.8+R()*.9;dm.scale.set(sc,sc,sc);dm.rotation.set(0,0,0);
    dm.position.set(x,.8*sc,z);dm.updateMatrix();trunk.setMatrixAt(i,dm.matrix);
    dm.position.set(x,(1.6+2.2)*sc,z);dm.updateMatrix();can.setMatrixAt(i,dm.matrix);
    dm.position.set(x,(1.6+4.4)*sc,z);dm.updateMatrix();can2.setMatrixAt(i,dm.matrix)}
   [trunk,can,can2].forEach(m=>{m.instanceMatrix.needsUpdate=true})}
- // trees & cars
+
  const tree=(x,z)=>{box(.5,2,.5,0x8a5a2b,x,1,z);const s=new T.Mesh(new T.SphereGeometry(1.8,12,10),lam(0x4fb35d));s.position.set(x,3.2,z);scene.add(s)};
- [[-34,6],[-34,18],[34,6],[34,18],[-20,22],[20,22],[-40,-14],[40,-14],[-31,32],[48,18]].forEach(p=>tree(p[0],p[1]));
- solid(-10,20,2.2,4.2,1.1,0xff6b57);solid(-15,19.5,2.2,4.2,1.1,0x6db7ff);solid(-5.5,22,2.2,4.2,1.1,0xffc93c);
+ [[-72,10],[-72,-14],[-34,20],[64,6],[64,-10],[30,22],[-20,18],[-40,-18],[40,-18],[56,22],[-72,40]].forEach(p=>tree(p[0],p[1]));
 })();
 
 /* ===== characters ===== */
@@ -464,7 +504,7 @@ function mkStretcher(){
 let room=null,userCap=null,dlCap=null,mode=null,phase='wait';
 const me={name:'',role:'nurse',look:0};
 const pos={x:0,z:17,ry:Math.PI,spd:0};
-let camYaw=0,camPitch=.95,camDist=10,camT={x:0,z:17};
+let camYaw=0,camPitch=.95,camDist=10,camT={x:-4,z:16};
 let myMesh=null,run=false,frozen=false;
 const remotes=new Map(),npcView=new Map(),roster=new Map();
 let seenMsn=new Set(),ackd=new Set(),bannerId=-1,bannerTimer=0,msnList=[];
@@ -698,7 +738,7 @@ function zigzag(path){
 }
 function playerFlee(){
  if(phase==='end')return;if(held){toast('คุณถูกจับเป็นตัวประกัน ขยับไม่ได้');return}
- const ex=[DOORS['lobby-out'],DOORS['er-out']];let dn=1e9;ex.forEach(d=>{dn=Math.min(dn,Math.hypot(d[0]-pos.x,d[1]-pos.z))});
+ const ex=[DOORS['lobby-out'],DOORS['er-out'],DOORS['ward-out']];let dn=1e9;ex.forEach(d=>{dn=Math.min(dn,Math.hypot(d[0]-pos.x,d[1]-pos.z))});
  if(dn<9||zoneOf(pos.x,pos.z)==='out'){const a=asmPt();goPath(a[0],a[1],true,()=>toast('ถึงจุดรวมพล '+'AB'[asmSide]+' แล้ว'));toast('ใกล้ทางออก วิ่งไปจุดรวมพล '+'AB'[asmSide]+' (จุดสีเขียวที่ปลอดภัย)')}
  else{
   const h=pickHide(pos.x,pos.z);
@@ -764,8 +804,8 @@ function frame(now){
  updateViews(dt,t);
  if(fin.on)updateFinale(dt,t);
  const lobbyShown=!mode;
- const tx=lobbyShown?Math.sin(t*.1)*10:camT.x,tz=lobbyShown?4:camT.z;
- const yaw=lobbyShown?t*.12:camYaw,d=lobbyShown?26:camDist,pc=lobbyShown?.7:camPitch;
+ const tx=lobbyShown?17+Math.sin(t*.1)*14:camT.x,tz=lobbyShown?4:camT.z;
+ const yaw=lobbyShown?t*.12:camYaw,d=lobbyShown?48:camDist,pc=lobbyShown?.7:camPitch;
  if(!fin.on&&cine&&!cineOff){
   const cf=cine.f,tx2=cine.x-(cf?4.5:9)+Math.sin(t*.3)*(cf?.7:1.2),tz2=cine.z+(cf?4.8:6.5);
   if(!cineP)cineP={x:camera.position.x,y:camera.position.y,z:camera.position.z};
@@ -831,8 +871,7 @@ function syncCam(){camUIs.forEach(ui=>{if(!ui.y.isConnected)return;const w=((cam
 const CIV=['visitor','relative','patient','staff','elder','janitor'];
 const ADM={multi:new Set(),mp:new Set(),follow:true,frz:{},sel:null,ctl:false,tab:'ctl',tx:0,tz:12,sim:false};
 let escorts=[],esCar=null,npcs=[],fires=[],nid=1,fid=1,t0=0,tEnd=0,banner='',bannerSeq=0,msns=[],mid=1,logs=[],evTimes=[],notes='',fireStart=0,fireOut=0;
-const BED=[[-19,4],[-15,4],[-11,4],[-19,9],[-15,9],[-11,9]];
-const HOME={er:[-21,-21,-9,-1],ward:[-21,1,-9,11],lobby:[-7,-21,7,10],pharm:[9,-21,21,-3],admin:[9,-1,21,11],entr:[-12,14,12,22],get assembly(){const b=ASMP[asmSide];return [b[0]-5.5,b[1]-3,b[0]+5.5,b[1]+5.5]},bay:[-33,0,-25,8]};
+const HOME={er:[-22,-12,-11,10],ward:[23,-12,56,10],lobby:[-7,-12,7,10],pharm:[11,-12,19,-3],admin:[11,1,19,10],entr:[-14,14,14,19],get assembly(){const b=ASMP[asmSide];return [b[0]-5.5,b[1]-3,b[0]+5.5,b[1]+5.5]},bay:[-58,-8,-46,4]};
 const SPEC={elder:.9,injured:1,bed:0,suspect:2.2};
 function lg(k,who,role,d,ok){logs.push({t:Date.now(),k,who:who||'',role:role||'',d:d||'',ok:ok===undefined?1:ok})}
 function fmt(ms){const s=Math.max(0,Math.round(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
@@ -863,7 +902,7 @@ function steer(n,dx,dz,d,sp,dt){
 }
 function sendTo(n,x,z,st,fl){n.route=routeTo(n.x,n.z,x,z);n.mode='route';if(st!==undefined)n.st=st;if(fl)n.fl|=fl}
 const FLEE=['visitor','relative','patient','staff','elder','janitor','doctor','nurse','porter','assistant'];
-const HIDE=[[-20.5,-20.5],[-20.5,10.5],[-9.5,10.5],[9.5,-3.5],[21,-20.5],[21,10.5],[9.5,10.5],[-9.5,-20.5],[-20.5,-10],[21,-12],[-9.5,-14]];
+const HIDE=[[-22.5,-12.5],[-22.5,10.5],[-10.5,10.5],[-10.5,-12.5],[10,-12.5],[20,-12.5],[10,10.5],[20,10.5],[22.5,-12.5],[22.5,10.5],[56.5,-12.5],[56.5,10.5],[-16,-13]];
 const RHF={run:0,hide:0,fight:0};
 function reactToSuspect(n,sus){
  if(n.fl&(4|8)||n.st===3||n.tp==='bed'||n.job||n.carried||n.claim||n.fighting)return;
@@ -893,8 +932,10 @@ function adj(x){let s=0;for(const iv of (cineOpen?cineIv.concat([[cineOpen,Date.
 function updThreat(){
  const m=ADM.threat||'auto';let side=asmSide;
  if(m==='E')side=0;else if(m==='W')side=1;
- else{const s=npcs.find(q=>q.tp==='suspect'&&!q.gone&&!(q.fl&8));if(s){if(s.x>4)side=0;else if(s.x<-4)side=1}}
- if(side!==asmSide){setAsmSide(side);const m2='คนร้ายมาทาง'+(side?'ซ้าย':'ขวา')+' ใช้จุดรวมพล '+'AB'[side]+' ที่ปลอดภัย';if(phase==='run')setBanner(m2);else toast(m2)}
+ else{const s=npcs.find(q=>q.tp==='suspect'&&!q.gone&&!(q.fl&8));
+  if(s){const dA=Math.hypot(s.x-ASMP[0][0],s.z-ASMP[0][1]),dB=Math.hypot(s.x-ASMP[1][0],s.z-ASMP[1][1]);
+   if(asmSide===0&&dB>dA+8)side=1;else if(asmSide===1&&dA>dB+8)side=0}}
+ if(side!==asmSide){setAsmSide(side);const m2='คนร้ายอยู่ใกล้อีกฝั่ง ใช้จุดรวมพล '+'AB'[side]+' ที่ปลอดภัย';if(phase==='run')setBanner(m2);else toast(m2)}
 }
 let formT=0,foC=0;
 const plazaOf=(x,z)=>{for(let i=0;i<2;i++){const b=ASMP[i];if(Math.abs(x-b[0])<=6.5&&Math.abs(z-b[1])<=6.5)return i}return -1};
@@ -1064,16 +1105,15 @@ function npcFight(n){if(!canCmd(n))return null;return startFight({npc:n})}
 let fights=[];let roomOpen=true;let intro=null,npcCleared=false,pstat={};ADM.autoIntro=true;
 
 /* ---- ฉากเปิดเหตุการณ์: ผู้ก่อเหตุเดินเข้าทางเข้า ยิง รปภ. ที่ป้อมยาม แล้วเข้าโถง OPD ---- */
-const POST={x:13.4,z:25.6},DEADP={x:14.5,z:23.0};
+const POST={x:-37.4,z:35.4},DEADP={x:-36.0,z:37.0};
 function introStart(){
  if(intro){toast('กำลังเล่นฉากเปิดเหตุการณ์อยู่');return}
- if(ADM.threat==='W'){ADM.threat='auto'}
  setAsmSide(0);
  let g=npcs.find(n=>n.tp==='guard'&&!n.gone&&!(n.fl&262144));
  if(!g)g=addNpc('guard','entr',{x:POST.x,z:POST.z});
  g.mode='still';g.route=[];g.tx=null;g.st=0;g.x=POST.x;g.z=POST.z;g.claim=1;g.leave=0;g.job=null;
- const s=addNpc('suspect','lobby',{x:12,z:47});
- s.mode='route';s.route=[[12,40],[12,33],[12.2,29.6]];s.st=1;s.sp2=3.3;s.ry=Math.PI;s.intro=1;
+ const s=addNpc('suspect','lobby',{x:-62,z:40});
+ s.mode='route';s.route=[[-44,40],[-41,38.2],[-40,36.0]];s.st=1;s.sp2=3.3;s.ry=Math.PI;s.intro=1;
  intro={ph:'walk',t:0,s,g};
  lg('evt','','','ฉากเปิดเหตุการณ์: ผู้ก่อเหตุเดินเข้ามาที่ป้อมยามหน้าทางเข้า');
  setBanner('มีผู้ต้องสงสัยเดินเข้ามาที่ทางเข้าโรงพยาบาล');
@@ -1093,7 +1133,7 @@ function introTick(dt){
   if(intro.t>=.5){g.fl=(g.fl&~131072)|262144;g.st=3;g.mode='still';g.dead=1;g.ry=Math.atan2(DEADP.x-intro.from.x,DEADP.z-intro.from.z);intro.ph='after';intro.t=0;
    lg('evt','','','ผู้ก่อเหตุยิง รปภ. ที่ป้อมยาม รปภ. เสียชีวิต (ฉากจำลอง)')}
  }else if(intro.ph==='after'){
-  if(intro.t>1.8){intro.ph='enter';intro.t=0;s.route=routeTo(s.x,s.z,rnd(-2,2),8);s.mode='route';s.st=1}
+  if(intro.t>1.8){intro.ph='enter';intro.t=0;s.route=routeTo(s.x,s.z,rnd(-2,2),6);s.mode='route';s.st=1}
  }else if(intro.ph==='enter'){
   if((s.mode==='still'&&!s.route.length)||intro.t>25){s.mode='wander';s.home='lobby';s.sp2=0;s.intro=0;s.tx=null;intro=null}
  }
@@ -1254,9 +1294,9 @@ function escortTick(dt){
   if(e.s.fightLock)continue;
   e.age=(e.age||0)+dt;
   if(e.ph==='go'&&e.age>40){e.o.x=e.s.x+1;e.o.z=e.s.z;e.o.route=[]}
-  if(e.ph==='lead'){e.lt=(e.lt||0)+dt;if(e.lt>35&&esCar&&esCar.ph==='park'){e.o.route=[];e.s.route=[];e.o.x=e.s.x=9.8;e.o.z=e.s.z=21.3}}
+  if(e.ph==='lead'){e.lt=(e.lt||0)+dt;if(e.lt>35&&esCar&&esCar.ph==='park'){e.o.route=[];e.s.route=[];e.o.x=e.s.x=-6;e.o.z=e.s.z=15.4}}
   if(e.ph==='go'){const d=Math.hypot(e.o.x-e.s.x,e.o.z-e.s.z);
-   if(d<1.5){e.ph='lead';e.o.route=routeTo(e.o.x,e.o.z,9.8,20.2);e.s.route=routeTo(e.s.x,e.s.z,9.8,22.4);e.o.mode=e.s.mode='route';e.o.st=e.s.st=6}
+   if(d<1.5){e.ph='lead';e.o.route=routeTo(e.o.x,e.o.z,-4.8,15.4);e.s.route=routeTo(e.s.x,e.s.z,-7.6,15.4);e.o.mode=e.s.mode='route';e.o.st=e.s.st=6}
    else if(!e.o.route.length){e.o.route=routeTo(e.o.x,e.o.z,e.s.x,e.s.z);e.o.mode='route';e.o.st=4}}
   else if(e.ph==='lead'){if(!esCar)esCar=newCar(CAR_IN,'in');
    if(!e.o.route.length&&!e.s.route.length&&esCar.ph==='park'){e.ph='load';e.t=0}}
@@ -1365,7 +1405,7 @@ function resetAll(){cineIv=[];cineOpen=0;incT=0;arrT=0;execAt={};ADM.manual={};h
 
 /* ===== admin UI ===== */
 function startAdmin(){
- mode='admin';document.body.classList.add('isadm');$('lobby').hidden=true;$('adm').hidden=false;$('hud').hidden=false;['who','missions','btnAct','btnChat','banner'].forEach(i=>$(i).hidden=true);camPitch=1.0;camDist=22;camT.x=0;camT.z=8;ADM.tx=0;ADM.tz=8;
+ mode='admin';document.body.classList.add('isadm');$('lobby').hidden=true;$('adm').hidden=false;$('hud').hidden=false;['who','missions','btnAct','btnChat','banner'].forEach(i=>$(i).hidden=true);camPitch=1.0;camDist=42;camT.x=16;camT.z=8;ADM.tx=16;ADM.tz=8;
  if(!npcs.length){addNpc('visitor','lobby');addNpc('visitor','lobby');addNpc('relative','lobby');addNpc('patient','lobby');addNpc('elder','lobby');addNpc('bed','ward');addNpc('bed','ward');addNpc('patient','ward');addNpc('staff','pharm');addNpc('janitor','lobby');addNpc('janitor','ward');addNpc('porter','lobby');addNpc('porter','ward');addNpc('assistant','lobby')}
  if(room)room.presence({adm:1,r:null}).catch(()=>{});
  const tabs=[['ctl','ควบคุม'],['npc','NPC'],['ply','ผู้เล่น'],['qr','QR เชิญ']];
@@ -1388,7 +1428,7 @@ function setTab(k){
   <label class="row" style="gap:8px"><input type="checkbox" id="autoEnd" style="width:20px;height:20px;padding:0" ${ADM.autoEnd===false?'':'checked'}> เมื่อตำรวจนำตัวคนร้ายขึ้นรถ ให้จบการซ้อมและขึ้นหน้าสรุปอัตโนมัติ</label>
   <label class="row" style="gap:8px"><input type="checkbox" id="autoIntro" style="width:20px;height:20px;padding:0" ${ADM.autoIntro?'checked':''}> เมื่อกดเริ่ม ให้เล่นฉากผู้ก่อเหตุเข้ามาทันที</label>
   <h2>สถานการณ์</h2><div class="row"><button class="btn sm red" data-e="sus">⚠️ ผู้ก่อเหตุบุกเข้ามา (ฉาก)</button><button class="btn sm sun" data-e="evac">🏃 สั่งอพยพ</button><button class="btn sm sun" data-e="asmall">🚶 ทุกคนไปจุดรวมพล</button><button class="btn sm" data-e="move">🛏️ เคลื่อนย้ายคนไข้</button><button class="btn sm sun" data-e="fight">💪 สั่ง NPC รุมสู้ผู้ก่อเหตุ</button><button class="btn sm ghost" data-e="free">🕊 ปล่อยตัวประกัน</button></div>
-  <h2>จุดรวมพล</h2><div class="row"><select id="thr" style="flex:1"><option value="auto">อัตโนมัติ (ตามทิศที่คนร้ายอยู่)</option><option value="E">คนร้ายมาทางขวา → ใช้จุด A (ซ้าย)</option><option value="W">คนร้ายมาทางซ้าย → ใช้จุด B (ขวา)</option></select></div><div class="sub" id="thrNow"></div>
+  <h2>จุดรวมพล</h2><div class="row"><select id="thr" style="flex:1"><option value="auto">อัตโนมัติ (เลือกจุดที่ไกลคนร้ายกว่า)</option><option value="E">บังคับใช้จุด A (ลานหน้าอาคาร)</option><option value="W">บังคับใช้จุด B (ลาน EMS ข้างอาคาร)</option></select></div><div class="sub" id="thrNow"></div>
   <h2>ประกาศถึงทุกคน</h2><div class="row"><select id="ann" style="flex:1"><option value="">— เลือกข้อความประกาศ —</option>${ANN_PRE.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" id="annGo">ส่ง</button></div>
   <h2>มอบหมายภารกิจ</h2><div class="row"><select id="mTo" style="width:auto">${roleOpts}</select><select id="mTx" style="flex:1;min-width:140px"><option value="">— เลือกภารกิจ —</option>${MSN_PRE.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" id="mGo">ส่ง</button></div>
   <div class="list" id="mList"></div><h2>แชท</h2><div class="list" id="aChat" style="font-size:13px;max-height:120px;overflow-y:auto"></div>`;
@@ -1399,7 +1439,7 @@ function setTab(k){
   B.querySelectorAll('[data-lock]').forEach(b=>b.onclick=()=>{roomOpen=!roomOpen;lg('evt','แอดมิน','',roomOpen?'เปิดรับผู้เล่นเข้าห้อง':'ปิดรับผู้เล่นเข้าห้อง');const pk=npcPacket();if(room)room.emit('st',pk).catch(()=>{});toast(roomOpen?'เปิดรับผู้เล่นแล้ว':'ปิดรับผู้เล่นแล้ว (คนที่อยู่ในห้องยังเล่นต่อได้)',3000);setTab('ctl')});
   B.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>evt(b.dataset.e));
   q('#annGo').onclick=()=>{const v=q('#ann').value.trim();if(v){setBanner(v);q('#ann').value=''}};
-  {const th=q('#thr');th.value=ADM.threat||'auto';const nw=()=>{q('#thrNow').textContent='ตอนนี้จุดที่ปลอดภัยคือ จุดรวมพล '+'AB'[asmSide]+' (วงสีเขียว) · อีกจุดเป็นวงสีแดง'};nw();th.onchange=()=>{ADM.threat=th.value;updThreat();nw()}}
+  {const th=q('#thr');th.value=ADM.threat||'auto';const nw=()=>{q('#thrNow').textContent='ตอนนี้จุดที่ปลอดภัยคือ จุดรวมพล '+'AB'[asmSide]+' (พื้นสีเขียว) · อีกจุดเป็นพื้นสีแดง'};nw();th.onchange=()=>{ADM.threat=th.value;updThreat();nw()}}
   q('#mGo').onclick=()=>{const v=q('#mTx').value.trim();if(!v)return;const to=q('#mTo').value;msns.push({id:mid++,to,txt:v,t:Date.now(),acks:{}});lg('msn','แอดมิน',to==='all'?'ทุกอาชีพ':ROLES[to].th,'มอบภารกิจ: '+v);q('#mTx').value='';refreshLists()};
  }else if(k==='npc'){
   const n=npcs.find(q=>q.id===ADM.sel);
@@ -1487,7 +1527,7 @@ function setTab(k){
  refreshLists();
 }
 function adminChatLog(d){lg('chat',d.n,d.r,d.m);const c=$('aChat');if(c){const p=document.createElement('div');p.innerHTML='<b>'+esc(d.n)+'</b> '+esc(d.m);c.appendChild(p);c.scrollTop=1e5}}
-function zoneName(x,z){const k=zoneOf(x,z);if(k!=='out')return ZONES[k][2];return z>24&&z<37?'จุดรวมพล':x<-23?'ลานด้านข้าง':'ภายนอก'}
+function zoneName(x,z){const k=zoneOf(x,z);if(k!=='out')return ZONES[k][2];return Math.hypot(x-40,z-28)<9||Math.hypot(x+52,z+2)<9?'จุดรวมพล':x<-30&&z<14?'ลาน EMS':z>38?'ถนนหลัก':'ภายนอก'}
 function refreshLists(force){
  const e=$('mList');
  if(e){e.innerHTML=msns.slice().reverse().map(m=>{const el=Object.keys(roster).length;const need=[...roster.values()].filter(r=>m.to==='all'||m.to===r.r).length;return `<div class="it"><span>${esc(m.to==='all'?'ทุกอาชีพ':ROLES[m.to].th)}: ${esc(m.txt)}</span><span class="pill">${Object.keys(m.acks).length}/${need}</span></div>`}).join('')||'<p class="sub">ยังไม่มีภารกิจ</p>'}
@@ -1666,8 +1706,8 @@ function mkCar(){
  return g}
 
 /* ---- รถตำรวจวิ่งตามถนน ---- */
-const CAR_IN=[[-80,40],[12,40],[12,21.6]];
-const CAR_OUT=[[12,17.5],[24,17.5],[24,40],[60,40],[60,34.6]];
+const CAR_IN=[[-100,40],[-42,40],[-42,17.8],[-6,17.8]];
+const CAR_OUT=[[-3,17.8],[23,17.8],[23,40],[60,40],[60,34.6]];
 function newCar(wp,ph){return {x:wp[0][0],z:wp[0][1],th:0,i:1,v:ph==='in'?20:1,wp,ph,done:false}}
 function stepCar(c,dt){
  const wp=c.wp;if(c.i>=wp.length){c.done=true;return}
@@ -1689,7 +1729,7 @@ function playFinale(){
  const A=mkChar('police',0),B=mkChar('police',1),S=mkChar('suspect',2);
  setTag(A,'ตำรวจ','#ffffff');setTag(B,'ตำรวจ','#ffffff');setTag(S,'ผู้ก่อเหตุ','#ffb4ac');setIcon(S,'🔗');
  [A,B,S].forEach(c=>{c.position.set(0,0,13.5);scene.add(c)});
- fin.A=A;fin.B=B;fin.S=S;fin.objs=[car,A,B,S];fin.lk=[8,26];
+ fin.A=A;fin.B=B;fin.S=S;fin.objs=[car,A,B,S];fin.lk=[-6,17];
 }
 function endFinale(quiet){
  if(!fin.on)return;fin.on=false;fin.objs.forEach(o=>scene.remove(o));fin.objs=[];fin.hid.forEach(g=>g.visible=true);fin.hid=[];
@@ -1707,12 +1747,12 @@ function updateFinale(dt,t){
  const f=Math.floor(T0*4)%2;car.userData.red.visible=!!f;car.userData.blue.visible=!f;
  const u=T0<2.5?0:T0<7?(T0-2.5)/4.5:1,walking=u>0&&u<1;
  const put=(c,sx,ex,ez,vis)=>{c.visible=vis;const x=sx+(ex-sx)*u,z=13.5+(ez-13.5)*u;c.position.set(x,0,z);c.rotation.y=walking?Math.atan2(ex-sx,ez-13.5):Math.PI/2;animChar(c,walking?2.4:0,t,'')};
- put(fin.A,-1.4,9.8,19.4,T0<8.5);put(fin.S,0,9.8,21.4,T0<8.5);put(fin.B,1.4,9.8,23.4,T0<9.3);
+ put(fin.A,-1.4,-4.6,15.4,T0<8.5);put(fin.S,0,-6.2,15.4,T0<8.5);put(fin.B,1.4,-7.8,15.4,T0<9.3);
  const cap=T0<2.5?'รถตำรวจกำลังมาที่โรงพยาบาล':cs.ph==='out'?'รถตำรวจนำตัวผู้ก่อเหตุไปสถานีตำรวจ':cs.ph==='gone'?'ถึงสถานีตำรวจ จบการซ้อม':T0<7?'ตำรวจควบคุมตัวผู้ก่อเหตุไปที่รถ':'นำตัวผู้ก่อเหตุขึ้นรถ';
  if($('fincap').textContent!==cap)$('fincap').textContent=cap;
  // กล้อง: ภาพกว้างตอนรถมา แล้วตามรถตอนออกไปสถานี
  const follow=cs.ph==='out'||cs.ph==='gone';
- const lx=follow?cs.x:8,lz=follow?cs.z:26,cx=follow?cs.x-9:-2,cz=follow?cs.z+16:52,cy=follow?9:11;
+ const lx=follow?cs.x:-6,lz=follow?cs.z:17,cx=follow?cs.x-9:-14,cz=follow?cs.z+16:44,cy=follow?9:15;
  const k=Math.min(1,dt*2.2);fin.lk[0]+=(lx-fin.lk[0])*k;fin.lk[1]+=(lz-fin.lk[1])*k;
  fin.cp=fin.cp||[cx,cz];fin.cp[0]+=(cx-fin.cp[0])*k;fin.cp[1]+=(cz-fin.cp[1])*k;
  camera.position.set(fin.cp[0],cy,fin.cp[1]);camera.lookAt(fin.lk[0],1.5,fin.lk[1]);
