@@ -13,6 +13,10 @@ body{margin:0;background:var(--sky);color:var(--ink);font-family:'Kanit',system-
 button{font:inherit;color:inherit;cursor:pointer;border:0}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 input,select,textarea{font:inherit;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:9px 12px;width:100%;-webkit-user-select:text;user-select:text}
+.btn,button,select,input[type=checkbox],label{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+@media(pointer:coarse){.btn{min-height:44px}.btn.sm{padding:10px 14px}#tabs button{min-height:42px}.it{min-height:44px}}
+body.isadm #tag{left:calc(50% + 195px)}
+body.isadm #fs{left:auto;right:12px;bottom:auto;top:calc(max(26px,env(safe-area-inset-top,0px)) + 52px);transform:none}
 .btn{background:var(--teal);color:#fff;font-weight:600;border-radius:14px;padding:10px 16px;box-shadow:0 3px 0 var(--teal-d)}
 .btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--teal-d)}
 .btn.sun{background:var(--sun);color:var(--ink);box-shadow:0 3px 0 #d9a514}
@@ -88,7 +92,8 @@ body.isadm #acts{right:calc(max(16px,env(safe-area-inset-right,0px)) + 158px);al
 @media(max-width:640px){body.isadm #joy{bottom:calc(46vh + 14px)}body.isadm #acts{bottom:calc(46vh + 14px)}}
 .pan-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
 .pan-h span:last-child{display:flex;gap:6px}
-.pan.fold .pan-b{display:none}
+[hidden]{display:none!important}
+.pan.fold .pan-b{display:none!important}
 @media(max-width:640px){#adm{top:auto;left:0;width:100%;height:46vh;border-radius:20px 20px 0 0;padding-right:max(0px,env(safe-area-inset-right,0px))}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -242,7 +247,9 @@ let PR=LOW?.85:Math.min(devicePixelRatio||1,2);
 const renderer=(()=>{try{return new T.WebGLRenderer({canvas:$('cv'),antialias:!LOW,powerPreference:'low-power'})}catch(e){
  const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;z-index:99;background:#fff;color:#1b2a47;display:grid;place-content:center;text-align:center;padding:24px;font:500 18px Kanit,sans-serif';
  d.innerHTML='เครื่องนี้เปิดภาพ 3 มิติไม่ได้<br><small style="font-weight:400">ลองอัปเดต Chrome / WebView ของระบบ หรือเปิดลิงก์ด้วย Chrome ล่าสุด<br>หรือให้เพื่อนที่มีเครื่องใหม่กว่าเล่นแทน</small>';document.body.appendChild(d);throw e}})();
-renderer.setPixelRatio(PR);
+let QMODE='auto';try{QMODE=localStorage.getItem('qm')||'auto'}catch(e){}
+function qPR(){const d=devicePixelRatio||1;return QMODE==='low'?.6:QMODE==='mid'?Math.min(d,1.5):QMODE==='high'?Math.min(d,2.5):(LOW?.85:Math.min(d,2))}
+PR=qPR();renderer.setPixelRatio(PR);
 const scene=new T.Scene();scene.background=new T.Color(0xcdeeff);scene.fog=new T.Fog(0xcdeeff,90,260);
 const camera=new T.PerspectiveCamera(50,1,0.1,600);
 scene.add(new T.HemisphereLight(0xffffff,0xbfd8a8,0.95));
@@ -434,14 +441,14 @@ addEventListener('keyup',e=>{key[e.code]=0});
  j.addEventListener('pointerup',end);j.addEventListener('pointercancel',end);
 })();
 (function camDrag(){
- const c=$('cv');let id=null,lx=0,ly=0,moved=0;
- c.addEventListener('pointerdown',e=>{id=e.pointerId;lx=e.clientX;ly=e.clientY;moved=0;c.setPointerCapture(id)});
- c.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);camYaw-=dx*.008;camPitch=Math.max(.35,Math.min(1.45,camPitch+dy*.005))});
- c.addEventListener('pointerup',e=>{if(e.pointerId===id){id=null;if(moved<6&&mode==='admin')pickNpc(e)}});
+ const c=$('cv');let id=null,lx=0,ly=0,sx=0,sy=0,moved=0;
+ c.addEventListener('pointerdown',e=>{id=e.pointerId;lx=sx=e.clientX;ly=sy=e.clientY;moved=0;c.setPointerCapture(id)});
+ c.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;moved=Math.max(moved,Math.hypot(e.clientX-sx,e.clientY-sy));if(moved<14)return;camYaw-=dx*.008;camPitch=Math.max(.35,Math.min(1.45,camPitch+dy*.005))});
+ c.addEventListener('pointerup',e=>{if(e.pointerId===id){id=null;if(moved<14&&mode==='admin')pickNpc(e)}});
  c.addEventListener('wheel',e=>{camDist=Math.max(5,Math.min(80,camDist*(1+e.deltaY*.0012)))},{passive:true});
 })();
 $('btnCam').onclick=()=>{const c=$('camset');c.hidden=!c.hidden;if(!c.hidden)camControls($('camsetb'))};
-document.querySelectorAll('.pan').forEach(p=>{const f=p.querySelector('[data-fold]');f.onclick=()=>{p.classList.toggle('fold');f.textContent=p.classList.contains('fold')?'ขยาย':'พับ'};p.querySelector('[data-close]').onclick=()=>{p.hidden=true}});
+document.querySelectorAll('.pan').forEach(p=>{const f=p.querySelector('[data-fold]');f.onclick=()=>{p.classList.toggle('fold');f.textContent=p.classList.contains('fold')?'ขยาย':'พับ'};p.querySelector('[data-close]').onclick=()=>{p.hidden=true;p.classList.remove('fold');f.textContent='พับ'}});
 $('btnAct2').onclick=()=>{if(mode!=='player')return;if(phase!=='run'){toast('ยังไม่อยู่ในช่วงซ้อม');return}emit('act',{c:'move'})};
 $('btnRun').onclick=()=>{run=!run;$('btnRun').textContent=run?'วิ่ง':'เดิน'};
 $('btnAct').onclick=()=>doAction();
@@ -640,7 +647,7 @@ let last=performance.now(),camUITick=0;
 let fpsN=0,fpsT=performance.now();
 function frame(now){
  requestAnimationFrame(frame);
- fpsN++;if(now-fpsT>2500){const fps=fpsN*1000/(now-fpsT);fpsN=0;fpsT=now;if(fps<22&&PR>.5){PR=Math.max(.5,PR*.75);renderer.setPixelRatio(PR);resize();toast('เครื่องช้า ลดความละเอียดภาพอัตโนมัติ',2500)}}
+ fpsN++;if(now-fpsT>2500){const fps=fpsN*1000/(now-fpsT);fpsN=0;fpsT=now;if(QMODE==='auto'&&fps<18&&PR>.8){PR=Math.max(.8,PR*.85);renderer.setPixelRatio(PR);resize();toast('เครื่องช้า ลดความละเอียดภาพอัตโนมัติ',2500)}}
  const dt=Math.min(.05,(now-last)/1000);last=now;const t=now/1000;
  if(mode)movePlayer(dt);
  if(mode==='admin')adminTick(dt,t);
@@ -673,9 +680,10 @@ requestAnimationFrame(frame);
 /* camera settings */
 const camUIs=[];
 function camControls(host,extra){
- host.innerHTML='<div class="lab">หมุนกล้อง</div><input type="range" data-c="y" min="-3.14" max="3.14" step="0.02"><div class="lab">มุมเงย</div><input type="range" data-c="p" min="0.35" max="1.45" step="0.01"><div class="lab">ระยะซูม</div><input type="range" data-c="d" min="5" max="80" step="0.5"><button class="btn sm ghost" data-c="r">รีเซ็ตกล้อง</button>'+(extra||'');
+ host.innerHTML='<div class="lab">หมุนกล้อง</div><input type="range" data-c="y" min="-3.14" max="3.14" step="0.02"><div class="lab">มุมเงย</div><input type="range" data-c="p" min="0.35" max="1.45" step="0.01"><div class="lab">ระยะซูม</div><input type="range" data-c="d" min="5" max="80" step="0.5"><div class="lab">ความคมชัดภาพ</div><select data-c="q"><option value="auto">อัตโนมัติ</option><option value="low">ประหยัด</option><option value="mid">ปกติ</option><option value="high">คมชัดสูง</option></select><button class="btn sm ghost" data-c="r">รีเซ็ตกล้อง</button>'+(extra||'');
  const ui={};host.querySelectorAll('[data-c]').forEach(el=>{ui[el.dataset.c]=el});
  ui.y.oninput=()=>camYaw=+ui.y.value;ui.p.oninput=()=>camPitch=+ui.p.value;ui.d.oninput=()=>camDist=+ui.d.value;
+ ui.q.value=QMODE;ui.q.onchange=()=>{QMODE=ui.q.value;try{localStorage.setItem('qm',QMODE)}catch(e){}PR=qPR();renderer.setPixelRatio(PR);resize();toast('ตั้งความคมชัด: '+ui.q.options[ui.q.selectedIndex].text)};
  ui.r.onclick=()=>{camYaw=0;camPitch=mode==='admin'?1.0:.95;camDist=mode==='admin'?22:10;syncCam()};
  camUIs.length=0;camUIs.push(ui);syncCam();
 }
@@ -811,7 +819,10 @@ function pickNpc(e){
  const rc=new T.Raycaster(),v=new T.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);rc.setFromCamera(v,camera);
  const objs=[];for(const [id,nv] of npcView){nv.g.userData.nid=id;objs.push(nv.g)}
  const hits=rc.intersectObjects(objs,true);
- for(const h of hits){let o=h.object;while(o&&!o.userData.nid)o=o.parent;if(o){ADM.sel=o.userData.nid;ADM.ctl=false;setTab('npc');return}}
+ for(const h of hits){let o=h.object;while(o&&!o.userData.nid)o=o.parent;if(o){ADM.sel=o.userData.nid;ADM.ctl=false;setTab('npc');toast('เลือก '+NT[npcView.get(o.userData.nid).tp].th+' '+o.userData.nid);return}}
+ {let bid=null,bd=46;const pv=new T.Vector3();
+  for(const [id,nv] of npcView){pv.set(nv.g.position.x,1,nv.g.position.z).project(camera);if(pv.z>1)continue;const sx=(pv.x+1)/2*innerWidth,sy=(1-pv.y)/2*innerHeight,d=Math.hypot(sx-e.clientX,sy-e.clientY);if(d<bd){bd=d;bid=id}}
+  if(bid!==null){ADM.sel=bid;ADM.ctl=false;setTab('npc');toast('เลือก '+NT[npcView.get(bid).tp].th+' '+bid);return}}
 
  const pt=new T.Vector3();
  if(rc.ray.intersectPlane(new T.Plane(new T.Vector3(0,1,0),0),pt)){
@@ -1030,6 +1041,9 @@ function evt(kind){
  else if(kind==='mci'){for(let i=0;i<6;i++)addNpc('injured','entr');for(let i=0;i<3;i++)addNpc('relative','entr');setBanner('มีผู้บาดเจ็บหมู่ที่หน้าโรงพยาบาล')}
  else if(kind==='sus'){addNpc('suspect','lobby',{x:rnd(-3,3),z:rnd(6,9)});setBanner('มีผู้ก่อเหตุวุ่นวายในโถง OPD')}
  else if(kind==='evac'){evacAll();setBanner('ประกาศอพยพ ไปที่จุดรวมพล')}
+ else if(kind==='fight'){const s=npcs.find(q=>q.tp==='suspect'&&!q.gone&&!(q.fl&8)&&!q.fightLock);if(!s){toast('ไม่มีผู้ก่อเหตุ กด "ผู้ก่อเหตุวุ่นวาย" ก่อน');return}
+  const c=npcs.filter(q=>canCmd(q)&&FLEE.includes(q.tp)&&q.st!==3).sort((a,b)=>Math.hypot(a.x-s.x,a.z-s.z)-Math.hypot(b.x-s.x,b.z-s.z))[0];
+  if(!c){toast('ไม่มี NPC ที่สู้ได้');return}const r=startFight({npc:c});toast(r.m)}
  else if(kind==='move'){const r=dispatchMove('ptr');toast(r.m);if(r.ok)lg('evt','แอดมิน','','สั่งเคลื่อนย้ายคนไข้ไปโซนปลอดภัย')}
 }
 function setPhase(p){
@@ -1060,7 +1074,7 @@ function setTab(k){
  if(k==='ctl'){
   B.innerHTML=`<div class="row"><span class="pill ${phase}" id="ph">${{wait:'รอเริ่ม',run:'กำลังซ้อม',pause:'พัก',end:'จบแล้ว'}[phase]}</span><b id="clock" style="font-variant-numeric:tabular-nums">00:00</b><span class="lab" id="np">ผู้เล่น 0 คน</span></div>
   <div class="row">${phase==='wait'?'<button class="btn" id="bStart">เริ่มซ้อม</button>':''}${phase==='run'?'<button class="btn sun" id="bPause">พัก</button>':''}${phase==='pause'?'<button class="btn" id="bRes">ซ้อมต่อ</button>':''}${phase==='run'||phase==='pause'?'<button class="btn red" id="bEnd">จบและสรุปผล</button>':''}${phase==='end'?'<button class="btn" id="bSum">ดูสรุปผล</button><button class="btn ghost" id="bFin">ดูฉากจบอีกครั้ง</button><button class="btn ghost" id="bReset">เริ่มรอบใหม่</button>':''}</div>
-  <h2>สถานการณ์</h2><div class="row"><button class="btn sm red" data-e="mci">🚑 ผู้บาดเจ็บหมู่</button><button class="btn sm red" data-e="sus">⚠️ ผู้ก่อเหตุวุ่นวาย</button><button class="btn sm sun" data-e="evac">🏃 สั่งอพยพ</button><button class="btn sm" data-e="move">🛏️ เคลื่อนย้ายคนไข้</button></div>
+  <h2>สถานการณ์</h2><div class="row"><button class="btn sm red" data-e="mci">🚑 ผู้บาดเจ็บหมู่</button><button class="btn sm red" data-e="sus">⚠️ ผู้ก่อเหตุวุ่นวาย</button><button class="btn sm sun" data-e="evac">🏃 สั่งอพยพ</button><button class="btn sm" data-e="move">🛏️ เคลื่อนย้ายคนไข้</button><button class="btn sm sun" data-e="fight">💪 สั่ง NPC รุมสู้ผู้ก่อเหตุ</button></div>
   <h2>ประกาศถึงทุกคน</h2><div class="row"><input id="ann" maxlength="100" placeholder="ข้อความประกาศ" style="flex:1"><button class="btn sm" id="annGo">ส่ง</button></div>
   <h2>มอบหมายภารกิจ</h2><div class="row"><select id="mTo" style="width:auto">${roleOpts}</select><input id="mTx" maxlength="120" placeholder="เช่น ตรวจจุดรับผู้ป่วยหน้า ER" style="flex:1;min-width:120px"><button class="btn sm" id="mGo">ส่ง</button></div>
   <div class="list" id="mList"></div><h2>แชท</h2><div class="list" id="aChat" style="font-size:13px;max-height:120px;overflow-y:auto"></div>`;
@@ -1091,8 +1105,9 @@ function setTab(k){
   q('#mGo').onclick=()=>{const zk=q('#mZ').value;picked().forEach(n=>{const p=inZone(zk);n.job=null;n.tx=null;sendTo(n,p.x,p.z,1);n.fl&=~64});lg('evt','แอดมิน','','สั่ง NPC '+picked().length+' ตัวไป '+ZONES[zk][2])};
   B.querySelectorAll('[data-mb]').forEach(b=>b.onclick=()=>{const a=b.dataset.mb,ps=picked();
    if(a==='del'){npcs=npcs.filter(n=>!ADM.multi.has(n.id));ADM.multi.clear();ADM.sel=null;ADM.ctl=false;setTab('npc');return}
+   if((a==='flee'||a==='hide'||a==='fight')&&!ps.length){toast('ยังไม่ได้ติ๊กเลือก NPC ติ๊กช่องหน้าชื่อในรายการก่อน');return}
    if(a==='flee'||a==='hide'||a==='fight'){ps.forEach(n=>{if(a==='flee')npcFlee(n);else if(a==='hide')npcHide(n)});
-    if(a==='fight'){const f=ps.filter(canCmd);if(f.length){const r=startFight({npc:f[0]});f.slice(1,3).forEach(q=>{if(r.ok){const ff=fights[fights.length-1];if(ff&&!ff.fs.includes(q)){q.fighting=1;ff.fs.push(q);sendTo(q,ff.s.x+rnd(-1.4,1.4),ff.s.z+rnd(-1.4,1.4),4)}}});toast(r.m)}}
+    if(a==='fight'){const f=ps.filter(canCmd);if(f.length){const r=startFight({npc:f[0]});f.slice(1,3).forEach(q=>{if(r.ok){const ff=fights[fights.length-1];if(ff&&!ff.fs.includes(q)){q.fighting=1;ff.fs.push(q);sendTo(q,ff.s.x+rnd(-1.4,1.4),ff.s.z+rnd(-1.4,1.4),4)}}});toast(r.m)}else toast('NPC ที่เลือกสู้ไม่ได้ในตอนนี้')}
     lg('evt','แอดมิน','',b.textContent+' x'+ps.length);return}
    ps.forEach(n=>{n.job=null;n.hold=0;n.route=[];n.tx=null;n.fl&=~64;
     if(a==='stand'){n.mode='still';n.st=0}else if(a==='wander'){n.mode='wander';n.st=0;const zz=zoneOf(n.x,n.z);n.home=zz==='out'?'entr':zz}
@@ -1109,7 +1124,8 @@ function setTab(k){
     else if(a==='evac'){n.fl&=~(4|8|64);n.st=0;startEvac(n)}
     else if(a==='calm'){n.fl|=32}
     else if(a==='flee')npcFlee(n);else if(a==='hide')npcHide(n);
-    else if(a==='fight'){const r=npcFight(n);if(r)toast(r.m)}
+    else if(a==='fight'){if(n.tp==='suspect')toast('ผู้ก่อเหตุสู้เองไม่ได้ เลือก NPC ตัวอื่น');else{const r=npcFight(n);toast(r?r.m:'ตัวนี้สู้ไม่ได้ในตอนนี้')}}
+    else if(a==='flee'&&!canCmd(n))toast('ตัวนี้สั่งไม่ได้ในตอนนี้')
     lg('evt','แอดมิน','',b.textContent+' '+NT[n.tp].th+' '+n.id);setTab('npc')});
    q('#nGo').onclick=()=>{const z=ZONES[q('#nZ').value],p=inZone(q('#nZ').value);ADM.ctl=false;sendTo(n,p.x,p.z,1);n.fl&=~64};
    q('#nTr').onclick=()=>{n.fl^=1;setTab('npc')};
@@ -1280,4 +1296,3 @@ function updateFinale(dt,t){
 
 </script>
 </body></html>
-
