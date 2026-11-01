@@ -65,7 +65,7 @@ body.isadm #tl{left:auto;right:12px;top:max(26px,env(safe-area-inset-top,0px))}
 #chat{position:absolute;left:12px;right:12px;bottom:180px;max-width:340px;background:rgba(255,255,255,.92);border:2px solid var(--line);border-radius:16px;padding:10px;display:grid;gap:8px}
 #chatlog{max-height:22vh;overflow-y:auto;font-size:13px;display:grid;gap:3px;touch-action:pan-y}
 #toast{position:fixed;left:50%;bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 160px);transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:8px 14px;z-index:40;max-width:86vw;text-align:center;pointer-events:none}
-#pbar{position:fixed;z-index:46;top:max(8px,env(safe-area-inset-top,0px));left:410px;display:flex;gap:8px;align-items:center;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:6px 10px;box-shadow:0 3px 0 rgba(27,42,71,.25)}#pbar .btn{min-height:44px;font-size:17px}#pbar b{font-variant-numeric:tabular-nums}@media(max-width:640px){#pbar{left:8px;top:max(8px,env(safe-area-inset-top,0px))}}
+#pbar{position:fixed;z-index:46;flex-wrap:wrap;max-width:calc(100vw - 16px);top:max(8px,env(safe-area-inset-top,0px));left:410px;display:flex;gap:8px;align-items:center;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:6px 10px;box-shadow:0 3px 0 rgba(27,42,71,.25)}#pbar .btn{min-height:44px;font-size:17px}#pbar b{font-variant-numeric:tabular-nums}@media(max-width:640px){#pbar{left:8px;top:max(8px,env(safe-area-inset-top,0px))}}
 #adm{position:fixed;z-index:12;background:var(--paper);border:2px solid var(--line);display:grid;grid-template-rows:auto 1fr;overflow:hidden;left:0;top:0;bottom:0;width:min(390px,100vw);border-radius:0 20px 20px 0;padding-top:max(0px,env(safe-area-inset-top,0px));padding-left:max(0px,env(safe-area-inset-left,0px))}
 #adm.fold{bottom:auto;width:auto;max-width:100vw;border-radius:0 0 20px 0}#adm.fold #tabbody{display:none}#adm.fold #tabs button:not(#admFold){display:none}
 #tabs{display:flex;gap:4px;padding:8px;background:var(--soft);overflow-x:auto}
@@ -696,7 +696,7 @@ function wireNet(){
  room.on('chat',m=>{if(m.data)chatLine(m.data);if(mode==='admin'&&m.data)adminChatLog(m.data)});
  room.on('act',m=>{if(mode==='admin')adminAct(m)});
  room.on('ack',m=>{if(mode==='admin')adminAck(m)});
- room.onConnection(c=>{$('conn').textContent=c?'เชื่อมต่อห้องซ้อมแล้ว':'กำลังเชื่อมต่อ…'});
+ room.onConnection(c=>{const e=$('conn');e.textContent=c?'🟢 เชื่อมต่อฐานข้อมูลแล้ว พร้อมให้ผู้เล่นเข้า':'🟠 กำลังเชื่อมต่อ…';e.style.color=c?'#1f8a4c':'#b26a00';e.style.fontWeight='600'});
 }
 
 /* camera + loop */
@@ -739,7 +739,7 @@ requestAnimationFrame(frame);
    if(userCap&&userCap.canEdit&&userCap.canEdit())$('goAdmin').hidden=false;
   }
   if(!room)$('conn').textContent='⚠ ยังไม่ได้เชื่อมห้องซ้อม (โหมดเดี่ยว) ตรวจค่า Firebase ในไฟล์';
- }catch(e){$('conn').textContent='เชื่อมต่อห้องไม่สำเร็จ ใช้โหมดเดี่ยว'}
+ }catch(e){$('conn').textContent='🔴 เชื่อมต่อห้องไม่สำเร็จ ใช้โหมดเดี่ยว';$('conn').style.color='#c0392b'}
 })();
 
 /* camera settings */
@@ -1201,17 +1201,24 @@ function evt(kind){
   if(!c){toast('ไม่มี NPC ที่สู้ได้');return}const r=startFight({npc:c});toast(r.m)}
  else if(kind==='move'){const r=dispatchMove('ptr');toast(r.m);if(r.ok)lg('evt','แอดมิน','','สั่งเคลื่อนย้ายคนไข้ไปโซนปลอดภัย')}
 }
+function updNet(){
+ const e=$('pnet');if(!e)return;
+ const ok=!!room&&(typeof room.connected!=='function'||room.connected());
+ let n=0;if(room){try{n=room.peers().filter(p=>p.presence&&ROLES[p.presence.r]).length}catch(_){}}
+ e.textContent=ok?'🟢 ออนไลน์ · ผู้เล่น '+n+' คน':(room?'🟠 กำลังเชื่อมต่อ…':'🔴 โหมดเดี่ยว (ไม่ออนไลน์)');
+ e.style.background=ok?'#d9f7e3':(room?'#fff0c9':'#ffd9d6');
+}
 function renderPbar(){
  const b=$('pbar');if(!b)return;if(mode!=='admin'){b.hidden=true;return}
- b.hidden=false;const k=phase+'|'+(typeof tEnd);if(b._k===k&&b.firstChild)return;b._k=k;
+ b.hidden=false;const k=phase+'|'+(typeof tEnd);if(b._k===k&&b.firstChild){updNet();return}b._k=k;
  const L={wait:'รอเริ่ม',run:'กำลังซ้อม',pause:'พัก',end:'จบแล้ว'}[phase];
- b.innerHTML='<span class="pill '+phase+'">'+L+'</span><b id="pclock">00:00</b>'+
+ b.innerHTML='<span id="pnet" class="pill" style="white-space:nowrap">…</span><span class="pill '+phase+'">'+L+'</span><b id="pclock">00:00</b>'+
   (phase==='wait'?'<button class="btn" data-pp="run">▶ เริ่มซ้อม</button>':'')+
   (phase==='run'?'<button class="btn sun" data-pp="pause">⏸ พัก</button>':'')+
   (phase==='pause'?'<button class="btn" data-pp="run">▶ ซ้อมต่อ</button>':'')+
   (phase==='run'||phase==='pause'?'<button class="btn red" data-pp="end">⏹ จบ</button>':'')+
   (phase==='end'?'<button class="btn" data-pp="sum">ดูสรุปผล</button>':'');
- b.querySelectorAll('[data-pp]').forEach(x=>x.onclick=()=>{const v=x.dataset.pp;if(v==='sum')showSummary();else setPhase(v)});
+ updNet();b.querySelectorAll('[data-pp]').forEach(x=>x.onclick=()=>{const v=x.dataset.pp;if(v==='sum')showSummary();else setPhase(v)});
 }
 setInterval(()=>{const b=$('pbar');if(!b||b.hidden&&mode!=='admin')return;renderPbar();const c=$('clock'),pc=$('pclock');if(c&&pc)pc.textContent=c.textContent},400);
 function setPhase(p){
