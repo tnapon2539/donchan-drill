@@ -65,6 +65,7 @@ body.isadm #tl{left:auto;right:12px;top:max(26px,env(safe-area-inset-top,0px))}
 #chat{position:absolute;left:12px;right:12px;bottom:180px;max-width:340px;background:rgba(255,255,255,.92);border:2px solid var(--line);border-radius:16px;padding:10px;display:grid;gap:8px}
 #chatlog{max-height:22vh;overflow-y:auto;font-size:13px;display:grid;gap:3px;touch-action:pan-y}
 #toast{position:fixed;left:50%;bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 160px);transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:8px 14px;z-index:40;max-width:86vw;text-align:center;pointer-events:none}
+#pbar{position:fixed;z-index:46;top:max(8px,env(safe-area-inset-top,0px));left:410px;display:flex;gap:8px;align-items:center;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:6px 10px;box-shadow:0 3px 0 rgba(27,42,71,.25)}#pbar .btn{min-height:44px;font-size:17px}#pbar b{font-variant-numeric:tabular-nums}@media(max-width:640px){#pbar{left:8px;top:max(8px,env(safe-area-inset-top,0px))}}
 #adm{position:fixed;z-index:12;background:var(--paper);border:2px solid var(--line);display:grid;grid-template-rows:auto 1fr;overflow:hidden;left:0;top:0;bottom:0;width:min(390px,100vw);border-radius:0 20px 20px 0;padding-top:max(0px,env(safe-area-inset-top,0px));padding-left:max(0px,env(safe-area-inset-left,0px))}
 #adm.fold{bottom:auto;width:auto;max-width:100vw;border-radius:0 0 20px 0}#adm.fold #tabbody{display:none}#adm.fold #tabs button:not(#admFold){display:none}
 #tabs{display:flex;gap:4px;padding:8px;background:var(--soft);overflow-x:auto}
@@ -142,6 +143,7 @@ body.isadm #acts{right:calc(max(16px,env(safe-area-inset-right,0px)) + 158px);al
  <div id="chat" class="pan" hidden><div class="pan-h"><span>แชท</span><span><button class="btn sm ghost" data-fold>พับ</button><button class="btn sm ghost" data-close>ปิด</button></span></div><div class="pan-b" style="display:grid;gap:8px"><div id="chatlog"></div><div class="row"><input id="chatin" maxlength="80" placeholder="พิมพ์ข้อความ" style="flex:1"><button class="btn sm" id="chatsend">ส่ง</button></div></div></div>
 </div>
 
+<div id="pbar" hidden></div>
 <div id="adm" hidden>
  <div id="tabs"></div>
  <div id="tabbody"></div>
@@ -292,7 +294,7 @@ function emojiSprite(e){
  if(!m){const c=document.createElement('canvas');c.width=c.height=96;const g=c.getContext('2d');g.font='64px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(e,48,52);m=new T.SpriteMaterial({map:new T.CanvasTexture(c),depthTest:false,transparent:true});lcache[k]=m}
  const s=new T.Sprite(m);s.scale.set(.9,.9,1);s.renderOrder=10;return s}
 
-const DOORDEF={'er-lobby':[-8,-6],'ward-lobby':[-8,6],'pharm-lobby':[8,-6],'admin-lobby':[8,6]};
+const DOORDEF={'er-lobby':[-8,-6],'ward-lobby':[-8,6],'pharm-lobby':[8,-6],'admin-lobby':[8,6],'er-ems':[-22,-4]};
 const DOORK=Object.keys(DOORDEF),doorState={},doorMesh={},doorZ={},doorRect={},closedDoors=[];
 function applyDoor(k,c){c=c?1:0;if(doorState[k]===c)return;if(doorState[k]!==undefined&&typeof sfx==='function'){const r=doorRect[k];sfx('door',{x:r[0],z:(r[1]+r[3])/2})}doorState[k]=c;const r=doorRect[k],i=closedDoors.indexOf(r);if(c&&i<0)closedDoors.push(r);if(!c&&i>=0)closedDoors.splice(i,1)}
 function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;const tz=doorZ[k]+(doorState[k]?0:3.7);m.position.z+=(tz-m.position.z)*Math.min(1,dt*5)}}
@@ -317,7 +319,10 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
  wall(-8,-12,-8,-8);wall(-8,-4,-8,4);wall(-8,8,-8,12);
  wall(8,-12,8,-8);wall(8,-4,8,4);wall(8,8,8,12);
  wall(-22,0,-8,0);wall(8,-2,22,-2);
- DOORK.forEach(k=>{const x=DOORDEF[k][0],z=DOORDEF[k][1];doorMesh[k]=box(.25,2.4,3.9,0x10b3a3,x,1.2,z+3.7);box(.3,.1,3.9,0xffc93c,0,2.3,0,doorMesh[k]);doorZ[k]=z;doorRect[k]=[x-.15,z-1.95,x+.15,z+1.95]});
+ DOORK.forEach(k=>{const x=DOORDEF[k][0],z=DOORDEF[k][1];doorMesh[k]=box(.25,2.4,3.9,0x10b3a3,x,1.2,z+3.7);box(.3,.1,3.9,0xffc93c,0,2.3,0,doorMesh[k]);box(.32,.8,1.4,0x9fd8ff,0,.35,0,doorMesh[k]);doorZ[k]=z;doorRect[k]=[x-.15,z-1.95,x+.15,z+1.95]});
+ // กรอบประตูทุกห้อง + ประตูหลักหน้า
+ DOORK.forEach(k=>{const x=DOORDEF[k][0],z=DOORDEF[k][1];box(.5,2.7,.3,0xffc93c,x,1.35,z-2.1);box(.5,2.7,.3,0xffc93c,x,1.35,z+2.1);box(.5,.35,4.5,0xffc93c,x,2.55,z)});
+ box(.3,2.7,.3,0xffc93c,-3.1,1.35,12);box(.3,2.7,.3,0xffc93c,3.1,1.35,12);box(6.5,.35,.5,0xffc93c,0,2.55,12);
  // room floors
  box(14,.04,12,0x7fa9c4,-15,.05,-6);box(14,.04,12,0x7fb596,-15,.05,6);box(14,.04,10,0xc4a77a,15,.05,-7);box(14,.04,14,0x9a8fc4,15,.05,5);box(16,.04,24,0xc9b98a,0,.05,0);
  label('ห้องฉุกเฉิน (ER)',-15,3.6,-10,1,'#ffd3cf');label('ผู้ป่วยใน',-15,3.6,10,1,'#d8f5e3');label('OPD / โถงต้อนรับ',0,3.6,-10,1,'#fff0b8');label('ห้องยา',15,3.6,-10.5,1,'#dcd3ff');label('สำนักงาน',15,3.6,10,1,'#d6e6ff');label('ลาน EMS',-29,3.2,-4,1,'#ffd3cf');
@@ -1196,12 +1201,25 @@ function evt(kind){
   if(!c){toast('ไม่มี NPC ที่สู้ได้');return}const r=startFight({npc:c});toast(r.m)}
  else if(kind==='move'){const r=dispatchMove('ptr');toast(r.m);if(r.ok)lg('evt','แอดมิน','','สั่งเคลื่อนย้ายคนไข้ไปโซนปลอดภัย')}
 }
+function renderPbar(){
+ const b=$('pbar');if(!b)return;if(mode!=='admin'){b.hidden=true;return}
+ b.hidden=false;const k=phase+'|'+(typeof tEnd);if(b._k===k&&b.firstChild)return;b._k=k;
+ const L={wait:'รอเริ่ม',run:'กำลังซ้อม',pause:'พัก',end:'จบแล้ว'}[phase];
+ b.innerHTML='<span class="pill '+phase+'">'+L+'</span><b id="pclock">00:00</b>'+
+  (phase==='wait'?'<button class="btn" data-pp="run">▶ เริ่มซ้อม</button>':'')+
+  (phase==='run'?'<button class="btn sun" data-pp="pause">⏸ พัก</button>':'')+
+  (phase==='pause'?'<button class="btn" data-pp="run">▶ ซ้อมต่อ</button>':'')+
+  (phase==='run'||phase==='pause'?'<button class="btn red" data-pp="end">⏹ จบ</button>':'')+
+  (phase==='end'?'<button class="btn" data-pp="sum">ดูสรุปผล</button>':'');
+ b.querySelectorAll('[data-pp]').forEach(x=>x.onclick=()=>{const v=x.dataset.pp;if(v==='sum')showSummary();else setPhase(v)});
+}
+setInterval(()=>{const b=$('pbar');if(!b||b.hidden&&mode!=='admin')return;renderPbar();const c=$('clock'),pc=$('pclock');if(c&&pc)pc.textContent=c.textContent},400);
 function setPhase(p){
  if(p==='run'&&phase==='wait'){t0=Date.now();lg('start','แอดมิน','','เริ่มการซ้อม')}
  else if(p==='run'&&phase==='pause'){lg('resume','แอดมิน','','ซ้อมต่อ')}
  else if(p==='pause')lg('pause','แอดมิน','','พักการซ้อม');
  else if(p==='end'){tEnd=Date.now();lg('end','แอดมิน','','จบการซ้อม')}
- const wasWait=phase==='wait';phase=p;const pk=npcPacket();if(room)room.emit('st',pk).catch(()=>{});setTab(ADM.tab);if(p==='end'){playFinale();sendCards()}
+ const wasWait=phase==='wait';phase=p;const pk=npcPacket();if(room)room.emit('st',pk).catch(()=>{});setTab(ADM.tab);renderPbar();if(p==='end'){playFinale();sendCards()}
  if(p==='run'&&wasWait&&ADM.autoIntro)introStart();
 }
 function resetAll(){incT=0;arrT=0;execAt={};ADM.manual={};hostages=[];intro=null;npcCleared=true;pstat={};fights=[];pending=[];renderAppr();DOORK.forEach(k=>applyDoor(k,0));RHF.run=RHF.hide=RHF.fight=0;moveOrder=null;moveEver=false;ADM.multi.clear();ADM.mp.clear();escorts=[];esCar=null;npcs=[];fires=[];logs=[];evTimes=[];msns=[];roster.clear();phase='wait';t0=0;tEnd=0;fireStart=0;fireOut=0;ADM.sel=null;ADM.ctl=false;banner='';bannerSeq++;nid=1;setTab('ctl')}
