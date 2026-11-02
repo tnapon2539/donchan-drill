@@ -41,7 +41,7 @@ h2{font-size:17px;margin:0}
 .look.on{border-color:var(--teal);background:#e1f8f4;box-shadow:0 0 0 3px #bfeee8}
 #logos{display:flex;align-items:center;gap:12px}
 #logos img{max-width:100%;display:block}
-#appr{position:fixed;top:max(30px,env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(430px,92vw);z-index:14;display:grid;gap:8px}
+#appr{flex:none;max-height:38%;overflow-y:auto;display:grid;gap:8px;padding:8px;background:#fff6dc;border-bottom:3px solid var(--sun)}#appr[hidden]{display:none}#adm.fold #appr{display:none}
 .apr{background:var(--paper);border:3px solid var(--sun);border-radius:16px;padding:10px 12px;display:grid;gap:8px;box-shadow:0 6px 0 rgba(27,42,71,.12)}
 #rhf{display:flex;gap:8px}
 #conn{font-size:12px;color:#4b5f7d}
@@ -66,12 +66,12 @@ body.isadm #tl{left:auto;right:12px;top:max(26px,env(safe-area-inset-top,0px))}
 #chatlog{max-height:22vh;overflow-y:auto;font-size:13px;display:grid;gap:3px;touch-action:pan-y}
 #toast{position:fixed;left:50%;bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 160px);transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:8px 14px;z-index:40;max-width:86vw;text-align:center;pointer-events:none}
 #pbar{position:fixed;z-index:46;flex-wrap:wrap;max-width:calc(100vw - 16px);top:max(8px,env(safe-area-inset-top,0px));left:410px;display:flex;gap:8px;align-items:center;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:6px 10px;box-shadow:0 3px 0 rgba(27,42,71,.25)}#pbar .btn{min-height:44px;font-size:17px}#pbar b{font-variant-numeric:tabular-nums}@media(max-width:640px){#pbar{left:8px;top:max(8px,env(safe-area-inset-top,0px))}}
-#adm{position:fixed;z-index:12;background:var(--paper);border:2px solid var(--line);display:grid;grid-template-rows:auto 1fr;overflow:hidden;left:0;top:0;bottom:0;width:min(390px,100vw);border-radius:0 20px 20px 0;padding-top:max(0px,env(safe-area-inset-top,0px));padding-left:max(0px,env(safe-area-inset-left,0px))}
+#adm{position:fixed;z-index:12;background:var(--paper);border:2px solid var(--line);display:flex;flex-direction:column;overflow:hidden;left:0;top:0;bottom:0;width:min(390px,100vw);border-radius:0 20px 20px 0;padding-top:max(0px,env(safe-area-inset-top,0px));padding-left:max(0px,env(safe-area-inset-left,0px))}
 #adm.fold{bottom:auto;width:auto;max-width:100vw;border-radius:0 0 20px 0}#adm.fold #tabbody{display:none}#adm.fold #tabs button:not(#admFold){display:none}
 #tabs{display:flex;gap:4px;padding:8px;background:var(--soft);overflow-x:auto}
 #tabs button{background:transparent;border-radius:10px;padding:6px 10px;white-space:nowrap;font-weight:500}
 #tabs button.on{background:var(--teal);color:#fff}
-#tabbody{overflow-y:auto;padding:12px;display:grid;gap:12px;align-content:start;touch-action:pan-y}
+#tabbody{flex:1;min-height:0;overflow-y:auto;padding:12px;display:grid;gap:12px;align-content:start;touch-action:pan-y}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .row>*{min-width:0}
 .pill{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:500;background:var(--soft);border:1px solid var(--line)}
@@ -139,6 +139,7 @@ body.isadm #acts{right:calc(max(16px,env(safe-area-inset-right,0px)) + 158px);al
  <div id="acts">
   <div id="rhf"><button class="btn red sm" id="btnFlee">🏃 หนี</button><button class="btn ghost sm" id="btnHide">🤫 ซ่อน</button><button class="btn sun sm" id="btnFight">💪 สู้</button></div>
   <button class="btn sun sm" id="btnAct2" hidden>เคลื่อนย้ายคนไข้</button>
+  <button class="btn ghost sm" id="btnSit" hidden>💺 นั่งโต๊ะ ผอ.</button>
   <button id="btnAct">ทำหน้าที่</button>
  </div>
  <div id="camset" class="pan" hidden><div class="pan-h"><span>ตั้งค่ากล้อง</span><span><button class="btn sm ghost" data-fold>พับ</button><button class="btn sm ghost" data-close>ปิด</button></span></div><div class="pan-b" id="camsetb" style="display:grid;gap:4px"></div></div>
@@ -148,11 +149,11 @@ body.isadm #acts{right:calc(max(16px,env(safe-area-inset-right,0px)) + 158px);al
 <div id="pbar" hidden></div>
 <div id="adm" hidden>
  <div id="tabs"></div>
+ <div id="appr" hidden></div>
  <div id="tabbody"></div>
 </div>
 
 <div class="sheet" id="pin" hidden><div class="card" style="width:min(380px,100%)"><h1>รหัสแอดมิน</h1><p class="sub">ใส่รหัสเพื่อเข้าเป็นผู้ควบคุมการซ้อม</p><input id="pinIn" type="password" inputmode="numeric" maxlength="16" placeholder="รหัส" autocomplete="off"><div id="pinMsg" class="sub" style="color:var(--bad)"></div><div class="row"><button class="btn" id="pinOk">ยืนยัน</button><button class="btn ghost" id="pinNo">ยกเลิก</button></div></div></div>
-<div id="appr" hidden></div>
 <div class="sheet" id="sum" hidden><div class="card" style="width:min(720px,100%)"><div id="sumbody"></div><div class="row"><button class="btn" id="sumExport">บันทึกรายงาน</button><button class="btn ghost" id="sumCsv">บันทึก Log (CSV)</button><button class="btn sun" id="sumPdf">📄 บันทึกเป็น PDF</button><button class="btn ghost" id="sumClose">ปิด</button></div></div></div>
 <div id="fin" hidden><div id="fincap"></div><button class="btn sm ghost" id="finSkip">ข้าม</button></div>
 <button id="fs" aria-label="เต็มจอ / ย่อ" title="เต็มจอ / ย่อ">⛶</button>
@@ -246,13 +247,13 @@ const ROLES={
  exec:{th:'ผู้บริหาร',desc:'สั่งการ ประกาศ',act:'สั่งการ',col:0x2b3350}
 };
 const LOOKS=[{skin:0xf2c29b,hair:0x2b1d14,n:'ผู้ชาย',f:0},{skin:0xf7cfb0,hair:0x4a2c1a,n:'ผู้หญิง',f:1}];
-const NT={patient:{th:'ผู้ป่วย',need:'med'},elder:{th:'ผู้สูงอายุ',need:'med'},bed:{th:'ผู้ป่วยใน',need:'med'},visitor:{th:'ประชาชน',need:''},relative:{th:'ญาติ',need:''},injured:{th:'ผู้บาดเจ็บ',need:'med'},suspect:{th:'ผู้ก่อเหตุ',need:'arrest'},staff:{th:'เจ้าหน้าที่',need:''},janitor:{th:'แม่บ้าน',need:''},police:{th:'ตำรวจ',need:''},guard:{th:'รปภ.',need:''},doctor:{th:'แพทย์',need:''},nurse:{th:'พยาบาล',need:''},porter:{th:'พนักงานเปล',need:''},assistant:{th:'ผู้ช่วยเหลือคนไข้',need:''}};
+const NT={patient:{th:'ผู้ป่วย',need:'med'},elder:{th:'ผู้สูงอายุ',need:'med'},bed:{th:'ผู้ป่วยใน',need:'med'},visitor:{th:'ประชาชน',need:''},relative:{th:'ญาติ',need:''},injured:{th:'ผู้บาดเจ็บ',need:'med'},suspect:{th:'ผู้ก่อเหตุ',need:'arrest'},staff:{th:'เจ้าหน้าที่',need:''},janitor:{th:'แม่บ้าน',need:''},police:{th:'ตำรวจ',need:''},guard:{th:'รปภ.',need:''},doctor:{th:'แพทย์',need:''},nurse:{th:'พยาบาล',need:''},porter:{th:'พนักงานเปล',need:''},assistant:{th:'ผู้ช่วยเหลือคนไข้',need:''},director:{th:'ผู้อำนวยการ',need:''}};
 const NTK=Object.keys(NT);
 const ZONES={er:[-16,-1,'ER'],ward:[30.5,-1,'IPD ผู้ป่วยใน'],back:[15,-16.2,'ทางเดินด้านหลัง'],lobby:[0,-2,'OPD/โถง'],pharm:[15,-8,'ห้องยา'],admin:[15,6,'บริหาร/สำนักงาน'],entr:[0,17,'หน้าโรงพยาบาล'],get assembly(){const b=ASMP[asmSide];return [b[0],b[1],'จุดรวมพล '+'AB'[asmSide]]},bay:[-50,-2,'ลาน EMS']};
 const RECT={er:[-24,-14,-9,12],ward:[21,-14,40,12],back:[-9,-18.5,40,-14.01],lobby:[-9,-14,9,12],pharm:[9,-14,21,-1],admin:[9,-1,21,12]};
-const DOORS={'er-lobby':[-9,-6],'pharm-lobby':[9,-7],'admin-lobby':[9,6],'lobby-out':[0,12.6],'er-out':[-24.6,-2],'ward-out':[29.5,12.6],'ward-out2':[35,12.6],'lobby-back':[0,-14],'ward-back':[35,-14]};
+const DOORS={'er-lobby':[-9,-6],'pharm-lobby':[9,-7],'admin-lobby':[9,6],'lobby-out':[-2.2,12.6],'lobby-out2':[2.2,12.6],'er-out':[-24.6,-2],'ward-out':[30.5,12.6],'lobby-back':[0,-14],'ward-back':[35,-14]};
 const NB={er:['lobby','out'],ward:['out','back'],pharm:['lobby'],admin:['lobby'],lobby:['er','pharm','admin','out','back'],out:['lobby','er','ward'],back:['lobby','ward']};
-const doorOf=(a,b,rx)=>{if((a==='ward'&&b==='out')||(a==='out'&&b==='ward')){const d1=DOORS['ward-out'],d2=DOORS['ward-out2'];return Math.abs(d1[0]-rx)<=Math.abs(d2[0]-rx)?d1:d2}return DOORS[a+'-'+b]||DOORS[b+'-'+a]};
+const doorOf=(a,b,rx)=>{if((a==='lobby'&&b==='out')||(a==='out'&&b==='lobby')){const d1=DOORS['lobby-out'],d2=DOORS['lobby-out2'];return Math.abs(d1[0]-rx)<=Math.abs(d2[0]-rx)?d1:d2}return DOORS[a+'-'+b]||DOORS[b+'-'+a]};
 function zoneOf(x,z){for(const k in RECT){const r=RECT[k];if(x>=r[0]&&x<=r[2]&&z>=r[1]&&z<=r[3])return k}return 'out'}
 function outVia(x,z,tx,tz){
  if(x<-25&&z<12.3&&tz>=12.3&&tx>=-25)return [[-28,15]];
@@ -303,20 +304,20 @@ function emojiSprite(e){
  if(!m){const c=document.createElement('canvas');c.width=c.height=96;const g=c.getContext('2d');g.font='64px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(e,48,52);m=new T.SpriteMaterial({map:new T.CanvasTexture(c),depthTest:false,transparent:true});lcache[k]=m}
  const s=new T.Sprite(m);s.scale.set(.9,.9,1);s.renderOrder=10;return s}
 
-let asmSide=0;const ASMP=[[40,28],[-8,28]],asmCirc=[];
+let asmSide=1;const ASMP=[[40,28],[-8,28]],asmCirc=[];
 function asmPt(){const b=ASMP[asmSide];return [b[0]+rnd(-5,5),b[1]+rnd(-3,5)]}
 const asmLab=[];
 function setAsmSide(v){asmSide=v?1:0;asmCirc.forEach((m,i)=>{try{m.material.color.setHex(i===asmSide?0x3ddc84:0xe5484d)}catch(e){}});
  if(typeof scene==='undefined')return;
  ASMP.forEach((b,i)=>{if(asmLab[i])scene.remove(asmLab[i]);const ok=i===asmSide;asmLab[i]=label('จุดรวมพล '+'AB'[i]+(ok?' ✔ ปลอดภัย':' ✖ อันตราย'),b[0],3.4,b[1]+7.4,1.2,ok?'#b8f5cf':'#ffc2bd')})}
 const BED=[[24,-11],[24,-5],[32,-11],[32,-6],[32,-1],[32,4],[38,-11],[38,-6],[38,-1],[38,4]];
-const DOORDEF={'er-lobby':[-9,-6,'v'],'pharm-lobby':[9,-7,'v'],'admin-lobby':[9,6,'v'],'ward-out':[29.5,12,'h',2.6],'ward-out2':[35,12,'h',2.6],'lobby-back':[0,-14,'h',3.4],'ward-back':[35,-14,'h',2.6],'er-ems':[-24,-2,'v']};
+const DOORDEF={'er-lobby':[-9,-6,'v'],'pharm-lobby':[9,-7,'v'],'admin-lobby':[9,6,'v'],'ward-out':[30.5,12,'h',5.6],'lobby-back':[0,-14,'h',3.4],'ward-back':[35,-14,'h',2.6],'er-ems':[-24,-2,'v']};
 const DOORK=Object.keys(DOORDEF),doorState={},doorMesh={},doorBase={},doorAx={},doorRect={},closedDoors=[];
 function applyDoor(k,c){c=c?1:0;if(doorState[k]===c)return;if(doorState[k]!==undefined&&typeof sfx==='function'){const r=doorRect[k];sfx('door',{x:(r[0]+r[2])/2,z:(r[1]+r[3])/2})}doorState[k]=c;const r=doorRect[k],i=closedDoors.indexOf(r);if(c&&i<0)closedDoors.push(r);if(!c&&i>=0)closedDoors.splice(i,1)}
 function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;const ax=doorAx[k],tg=doorBase[k]+(doorState[k]?0:4.1);m.position[ax]+=(tg-m.position[ax])*Math.min(1,dt*5)}}
 (function build(){
- const rc=0x6c7685,lw=0xffffff,pc=0xd8d2c4;
- const pw=(w,d,x,z)=>box(w,.04,d,pc,x,.09,z);
+ const rc=0x6c7685,lw=0xffffff,pc=0xc9c2b0;
+ const pw=(w,d,x,z)=>box(w,.04,d,pc,x,.125,z);
  box(260,.2,200,0x5fae6a,0,-.1,6);
  box(64,.12,34,0xa89b86,8,0.02,-3);                       // พื้นอาคาร
  // ---------- ถนน ----------
@@ -328,7 +329,7 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
  for(let z=18;z<38;z+=3.2)box(.2,.02,1.4,lw,-42,.09,z);
  box(6,.1,24,rc,23,.03,28);                                  // ถนนทางออก (ตะวันออก)
  for(let z=20;z<38;z+=3.2)box(.2,.02,1.4,lw,23,.09,z);
- box(19,.08,8,0xb9bcc4,30.5,.04,17);                         // ลานหน้า IPD
+ box(7,.05,1.4,0xc9c2b0,30.5,.1,12.7);                         // ลานหน้า IPD
  box(5,.1,9,0xaab3c0,60,.02,36);                             // ทางเข้าสถานีตำรวจ
  box(16,5,9,0xe8eef9,60,2.5,28);box(16.4,.8,9.4,0x1c2d6b,60,5.3,28);box(4,3,.3,0x2b3350,60,1.5,32.6);box(14,.5,.2,0xff4d4d,60,3.9,32.55);
  label('สถานีตำรวจ',60,7.6,32.6,1.6,'#1c2d6b');
@@ -350,10 +351,10 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
  ASMP.forEach((b,i)=>{const as=new T.Mesh(new T.PlaneGeometry(13,13),lam(0x3ddc84));as.rotation.x=-Math.PI/2;as.position.set(b[0],.13,b[1]);scene.add(as);asmCirc.push(as);
   [[0,-6.6,13.4,.4],[0,6.6,13.4,.4],[-6.6,0,.4,13],[6.6,0,.4,13]].forEach(e=>box(e[2],.06,e[3],lw,b[0]+e[0],.14,b[1]+e[1]));
   const fl=new T.Mesh(new T.BoxGeometry(.1,3.4,.1),lam(0xffffff));fl.position.set(b[0]+6.9,1.7,b[1]+6.9);scene.add(fl);box(1.4,.8,.05,0x26a269,b[0]+7.6,3.0,b[1]+6.9)});
- setAsmSide(0);
+ setAsmSide(1);
  // ---------- กำแพง ----------
  wall(-24,-14,-1.7,-14);wall(1.7,-14,33.7,-14);wall(36.3,-14,40,-14);wall(40,-14,40,12);   // เหนือ + ตะวันออก (เว้นประตูหลัง)
- wall(-24,12,-3,12);wall(3,12,28.2,12);wall(30.8,12,33.7,12);wall(36.3,12,40,12);        // ใต้ (ประตูหลัก + IPD 2 ทาง)
+ wall(-24,12,-3.5,12);wall(-.9,12,.9,12);wall(3.5,12,27.7,12);wall(33.3,12,40,12);        // ใต้ (ประตูหลัก + IPD 2 ทาง)
  // ทางเดินด้านหลัง OPD <-> IPD
  wall(-9,-18.5,40,-18.5);wall(-9,-18.5,-9,-14);wall(40,-18.5,40,-14);
  // IPD: ห้องพิเศษ 2 ห้อง + ห้องพยาบาล (ผนังเปิดช่องประตูกว้าง)
@@ -372,7 +373,7 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
    box(.5,2.7,.3,0xffc93c,x,1.35,z-h-.15);box(.5,2.7,.3,0xffc93c,x,1.35,z+h+.15);wallMs.push(box(.5,.35,w+.6,0xffc93c,x,2.55,z))}
   else{box(w,.1,.3,0xffc93c,0,1.1,0,lf);box(w*.36,.8,.32,0x9fd8ff,0,.35,0,lf);doorRect[k]=[x-h,z-.15,x+h,z+.15];
    box(.3,2.7,.5,0xffc93c,x-h-.15,1.35,z);box(.3,2.7,.5,0xffc93c,x+h+.15,1.35,z);wallMs.push(box(w+.6,.35,.5,0xffc93c,x,2.55,z))}});
- box(.3,2.7,.3,0xffc93c,-3.1,1.35,12);box(.3,2.7,.3,0xffc93c,3.1,1.35,12);wallMs.push(box(6.5,.35,.5,0xffc93c,0,2.55,12));
+ [-3.6,-.8,.8,3.6].forEach(x=>box(.3,2.7,.3,0xffc93c,x,1.35,12));wallMs.push(box(3.2,.35,.5,0xffc93c,-2.2,2.55,12),box(3.2,.35,.5,0xffc93c,2.2,2.55,12));
  // ---------- พื้นห้อง ----------
  box(15,.04,26,0x7fa9c4,-16.5,.05,-1);box(18,.04,26,0xc9b98a,0,.05,-1);box(12,.04,13,0xc4a77a,15,.05,-7.5);box(12,.04,13,0x9a8fc4,15,.05,5.5);box(19,.04,26,0x7fb596,30.5,.05,-1);box(6,.04,6,0xd9c8e6,24,.06,-5);box(6,.04,6,0xd9c8e6,24,.06,-11);box(6,.04,6,0xcfe0f0,24,.06,9);box(7,.04,6.4,0xe6d3a8,17.5,.06,9.2);box(49,.04,4.5,0xb8b0a0,15.5,.05,-16.25);
  label('ห้องฉุกเฉิน (ER)',-16.5,3.6,-12,1,'#ffd3cf');label('OPD / โถงต้อนรับ',0,3.6,-12,1,'#fff0b8');label('ห้องยา',15,3.6,-12,1,'#dcd3ff');label('บริหาร / สำนักงาน',15,3.6,10,1,'#d6e6ff');label('IPD ผู้ป่วยใน',31,3.6,-12,1.1,'#d8f5e3');
@@ -387,28 +388,38 @@ function animDoors(dt){for(const k of DOORK){const m=doorMesh[k];if(!m)continue;
  solid(-16.5,6,7,.9,1.1,0x10b3a3);for(const x of[-21,-12])solid(x,9.5,1.3,2.3,.7,0xffffff);
  for(const x of[12,15,18])solid(x,-12.5,3,.8,2,0xc9a36b);solid(15,-4,6,.9,1.1,0x10b3a3);
  solid(11.8,9.5,2,1.2,.9,0xb88958);solid(15,2,5,1,.9,0xb88958);
- {solid(18.2,9.5,1.2,3.2,.9,0x8a5a2b);const dg=new T.Group();dg.position.set(19.7,0,9.5);dg.rotation.y=-Math.PI/2;scene.add(dg);
-  const sk=0xf1c9a0;box(.7,.1,.7,0x333b4a,0,.5,0,dg);box(.7,.8,.1,0x333b4a,0,.95,-.38,dg);box(.55,.75,.3,0x23395d,0,.97,0,dg);box(.12,.35,.08,0xffffff,0,1.1,.16,dg);
-  box(.4,.15,.55,0x23395d,0,.6,.3,dg);box(.16,.5,.16,0x23395d,-.12,.32,.55,dg);box(.16,.5,.16,0x23395d,.12,.32,.55,dg);box(.12,.12,.5,0x23395d,-.3,1.0,.25,dg);box(.12,.12,.5,0x23395d,.3,1.0,.25,dg);
-  const hd=new T.Mesh(new T.SphereGeometry(.2,14,10),lam(sk));hd.position.set(0,1.55,0);dg.add(hd);const hr=new T.Mesh(new T.SphereGeometry(.215,14,8),lam(0x2b2b2b));hr.position.set(0,1.6,-.04);hr.scale.set(1,.75,1);dg.add(hr);
-  [-.09,.09].forEach(gx=>{const rg=new T.Mesh(new T.TorusGeometry(.07,.014,6,14),lam(0x111111));rg.position.set(gx,1.56,.19);dg.add(rg)});box(.06,.015,.02,0x111111,0,1.57,.2,dg);box(.4,.02,.02,0x111111,0,1.57,.18,dg);
-  box(.7,.04,.5,0xffffff,-0.2,.96,.55,dg);label('ผอ.',19.7,2.5,9.5,.8,'#ffe6b8')}
+ {solid(18.2,9.5,1.2,3.2,.9,0x8a5a2b);box(.7,.1,.7,0x333b4a,19.7,.5,9.5);box(.1,.8,.7,0x333b4a,20.2,.95,9.5);box(.5,.35,.08,0x1c2d6b,18.2,1.15,8.8)}
  box(.9,.4,.1,0x1c2d6b,18.4,1.4,8.4);
+ box(.3,2.7,.3,0xffc93c,14,1.35,8.25);box(.3,2.7,.3,0xffc93c,14,1.35,10.75);box(.3,.35,2.8,0xffc93c,14,2.55,9.5);label('เฉพาะผู้บริหาร',12.9,2.9,9.5,.7,'#ffd3cf');
  box(.5,.35,.08,0x1c2d6b,-18.5,1.35,6);box(.5,.35,.08,0x1c2d6b,-16.5,1.35,6);box(.5,.35,.08,0x1c2d6b,-14.5,1.35,6);label('เนิร์สสเตชั่น ER',-16.5,2.3,6,.8);
  label('ห้องพิเศษ 1',24,2.6,-11,.8,'#e6d9f5');label('ห้องพิเศษ 2',24,2.6,-5,.8,'#e6d9f5');label('ห้องรวม',35,2.6,-12.5,.9,'#d8f5e3');label('ห้องพยาบาล IPD',24,2.6,9,.8,'#d6e6ff');label('ห้อง ผอ.',17.5,2.6,12.2,.9,'#ffe6b8');
  BED.forEach(b=>{solid(b[0],b[1],1.3,2.3,.7,0xffffff);box(1.3,.08,2.3,0xbfe9d0,b[0],.74,b[1])});
  solid(24,9.5,4,1,1.1,0x10b3a3);box(.5,.35,.08,0x1c2d6b,23,1.35,9.5);box(.5,.35,.08,0x1c2d6b,25,1.35,9.5);label('เนิร์สสเตชั่น IPD',24,2.2,8.3,.7);
  // ---------- เสาธงชาติ ----------
- box(.16,9,.16,0xd9dde3,-17,4.5,21);{const sp=new T.Mesh(new T.SphereGeometry(.3,10,8),lam(0xffd45a));sp.position.set(-17,9.1,21);scene.add(sp)}
- {let y=0;[[0xd32f2f,.28],[0xffffff,.28],[0x1a3a8f,.56],[0xffffff,.28],[0xd32f2f,.28]].forEach(e=>{box(3.3,e[1]+.01,.05,e[0],-15.2,8.4-y-e[1]/2,21);y+=e[1]})}
- box(.5,.12,.5,0x9aa3ad,-17,.15,21);
+ box(.16,9,.16,0xd9dde3,4,4.5,34.8);{const sp=new T.Mesh(new T.SphereGeometry(.3,10,8),lam(0xffd45a));sp.position.set(4,9.1,34.8);scene.add(sp)}
+ {let y=0;[[0xd32f2f,.28],[0xffffff,.28],[0x1a3a8f,.56],[0xffffff,.28],[0xd32f2f,.28]].forEach(e=>{box(3.3,e[1]+.01,.05,e[0],5.7,8.4-y-e[1]/2,34.8);y+=e[1]})}
+ box(.5,.12,.5,0x9aa3ad,4,.15,34.8);
  // ---------- แฟลตห้องพัก ----------
  box(72,.1,6,rc,60,.03,17);box(6,.1,20,rc,95,.03,8);
  solid(108,0,26,14,13,0xe9d9c0);box(26.6,.5,14.6,0xb4533c,108,13.2,0);
  for(let r=0;r<3;r++)for(let c=0;c<6;c++){box(2,1.5,.1,0x9fd8ff,98+c*4,2.5+r*4,-7.1);box(2,1.5,.1,0x9fd8ff,98+c*4,2.5+r*4,7.1)}
  box(3,2.6,.12,0x8a5a2b,108,1.3,7.1);label('แฟลตห้องพัก (ห่างจาก IPD ~500 ม.)',108,15.4,0,1.4,'#ffe6b8');
+
+ // ---------- หอพระ (ตรงข้ามป้อมยาม) ----------
+ {const gx=-50,gz=34.5,gold=0xe0b030;box(3.2,.4,3.2,0xece5d2,gx,.2,gz);colliders.push([gx-1.6,gz-1.6,gx+1.6,gz+1.6]);
+  [[-1.3,-1.3],[1.3,-1.3],[-1.3,1.3],[1.3,1.3]].forEach(p=>box(.22,2.5,.22,0xfff4d6,gx+p[0],1.65,gz+p[1]));
+  box(4.2,.28,4.2,0xb5382b,gx,3.0,gz);box(3.0,.28,3.0,0xd4a017,gx,3.3,gz);
+  {const cn=new T.Mesh(new T.ConeGeometry(1.1,1.2,4),lam(gold));cn.position.set(gx,4.0,gz);cn.rotation.y=Math.PI/4;scene.add(cn)}
+  box(1.3,.35,1.3,0xf4efe0,gx,.58,gz);
+  const lt=new T.Mesh(new T.CylinderGeometry(.5,.62,.18,16),lam(gold));lt.position.set(gx,.85,gz);scene.add(lt);
+  const bd=new T.Mesh(new T.CylinderGeometry(.22,.46,.8,14),lam(gold));bd.position.set(gx,1.3,gz);scene.add(bd);
+  const hd=new T.Mesh(new T.SphereGeometry(.24,14,10),lam(gold));hd.position.set(gx,1.85,gz);scene.add(hd);
+  const tk=new T.Mesh(new T.ConeGeometry(.1,.26,8),lam(gold));tk.position.set(gx,2.18,gz);scene.add(tk);
+  box(.16,.16,.5,gold,gx-.34,1.2,gz+.12);box(.16,.16,.5,gold,gx+.34,1.2,gz+.12);
+  [[-.85,1.9],[.85,1.9]].forEach(p=>box(.18,.5,.18,0xd32f2f,gx+p[0],.8,gz+p[1]));
+  label('หอพระ 🙏',gx,5.2,gz,1.1,'#fff0b8')}
  // ---------- ทางเดิน + เสาไฟ ----------
- pw(6,3,0,13.5);pw(4,9,29.5,17);pw(4,9,35,17);pw(3,16,-28,15.5);
+ pw(6,3,0,13.5);;
  for(let x=-20;x<=40;x+=12){box(.16,3.2,.16,0x4b5563,x,1.6,13.3);const l=new T.Mesh(new T.SphereGeometry(.28,10,8),new T.MeshBasicMaterial({color:0xfff2b0}));l.position.set(x,3.3,13.3);scene.add(l)}
  // ===== ฉากหลัง: แม่น้ำ ภูเขา ทุ่งนา ป่า =====
  {const R=(()=>{let q=11;return()=>{q=(q*16807)%2147483647;return q/2147483647}})();
@@ -450,7 +461,7 @@ const _sp=(r,c,x,y,z,p,sx,sy,sz)=>{const m=new T.Mesh(new T.SphereGeometry(r,16,
 function mkChar(kind,look){
  const L=Object.assign({},LOOKS[look%2]),g=new T.Group();let col=0x4aa3df,hat=null,hairOn=true;
  const R=ROLES[kind];if(R)col=R.col;
- const npcCol={patient:0x9fd8ff,elder:0xc7b8ea,bed:0xbfe9d0,visitor:[0xff9e7a,0x7ad3a0,0xffd86b,0x8fb4ff][Math.floor(Math.random()*4)],relative:0xf4a6c8,injured:0xffffff,suspect:0x2a2a33,staff:0x4cc9b0,janitor:0x6aa8f0};
+ const npcCol={patient:0x9fd8ff,elder:0xc7b8ea,bed:0xbfe9d0,visitor:[0xff9e7a,0x7ad3a0,0xffd86b,0x8fb4ff][Math.floor(Math.random()*4)],relative:0xf4a6c8,injured:0xffffff,suspect:0x2a2a33,staff:0x4cc9b0,janitor:0x6aa8f0,director:0x23395d};
  if(!R)col=npcCol[kind]||0x4aa3df;
  const body=_cy(.3,.38,.66,col,0,.85,0,g);
  const legL=new T.Group(),legR=new T.Group(),armL=new T.Group(),armR=new T.Group();
@@ -472,6 +483,7 @@ function mkChar(kind,look){
   facility:()=>{hairOn=false;hat=_sp(.46,0xffd23f,0,1.8,0,g,1,.7,1);box(.62,.04,.4,0xffd23f,0,1.78,.28,g);_cy(.305,.385,.07,0xeeeeee,0,.9,0,g)},
   porter:()=>{hairOn=false;hat=_cy(.38,.42,.14,0x3ec1d3,0,1.96,0,g);box(.5,.04,.26,0x1fa0b3,0,1.9,.38,g);box(.4,.45,.1,0xffffff,0,1.0,.34,g);box(.05,.2,.02,0x3ec1d3,0,1.0,.4,g)},
   assistant:()=>{hairOn=false;hat=_cy(.38,.42,.14,0x8fe06a,0,1.96,0,g);box(.5,.04,.26,0x5cb83f,0,1.9,.38,g);box(.4,.45,.1,0xffffff,0,1.0,.34,g);_sp(.07,0xe03131,0,1.05,.4,g)},
+  director:()=>{box(.12,.5,.04,0xffffff,0,1.0,.3,g);[-.16,.16].forEach(gx=>{const rg=new T.Mesh(new T.TorusGeometry(.13,.024,8,16),lam(0x111111));rg.position.set(gx,1.62,.4);g.add(rg)});box(.08,.02,.03,0x111111,0,1.64,.42,g);box(.5,.02,.03,0x111111,0,1.64,.38,g)},
   elder:()=>{L.hair=0xdddddd;_cy(.03,.03,1,0x8a5a2b,.55,.5,.15,g)},
   injured:()=>{hat=box(.84,.18,.84,0xffffff,0,1.72,0,g);_sp(.05,0xe03131,.2,1.74,.43,g);box(.4,.5,.2,0xffffff,-.2,1.0,.34,g).rotation.z=.5},
   suspect:()=>{hairOn=false;hat=_sp(.46,0x444455,0,1.74,0,g,1,.8,1);box(.5,.28,.1,0x15151c,0,1.42,.4,g)},
@@ -480,7 +492,7 @@ function mkChar(kind,look){
   bed:()=>{}
  };
  if(add[kind])add[kind]();
- if(L.f){_sp(.44,L.hair,0,1.36,-.2,g,1,1.2,.8);_sp(.1,0xff6b9a,.3,1.95,-.1,g);box(.1,.025,.02,0x1b1b2a,-.15,1.68,.4,g);box(.1,.025,.02,0x1b1b2a,.15,1.68,.4,g)}
+ if(L.f){_sp(.447,L.hair,0,1.6,-.07,g,1,1,.96);_sp(.44,L.hair,0,1.4,-.3,g,1,1.25,.6);_cy(.1,.075,.85,L.hair,.4,1.48,-.04,g);_cy(.1,.075,.85,L.hair,-.4,1.48,-.04,g);_sp(.4,L.hair,0,1.87,.1,g,1,.5,.92);_sp(.1,0xff6b9a,.3,1.95,-.1,g);box(.1,.025,.02,0x1b1b2a,-.15,1.68,.4,g);box(.1,.025,.02,0x1b1b2a,.15,1.68,.4,g)}
  if(hairOn&&!hat){const h=new T.Mesh(new T.SphereGeometry(.45,16,10,0,Math.PI*2,0,Math.PI*.55),lam(L.hair));h.position.set(0,1.62,-.03);g.add(h);if(kind!=='elder'&&Math.random()<.4)_sp(.14,L.hair,0,1.95,-.3,g)}
  const sh=new T.Mesh(new T.CircleGeometry(.55,16),new T.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.18}));sh.rotation.x=-Math.PI/2;sh.position.y=.03;g.add(sh);
  g.userData={legL,legR,armL,armR,body,head,tag:null,ico:null,icoKey:'',ph:Math.random()*6};
@@ -501,10 +513,12 @@ function setIcon(g,emo){
  const u=g.userData;if(u.icoKey===emo)return;u.icoKey=emo;if(u.ico){g.remove(u.ico);u.ico=null}
  if(emo){const s=emojiSprite(emo);s.position.set(0,3.15,0);g.add(s);u.ico=s}}
 /* collision */
-function collide(p,r,ign){
+const DBLK=[13.7,8.4,14.3,10.6];
+function collide(p,r,ign,ex){
  const one=c=>{const cx=Math.max(c[0],Math.min(p.x,c[2])),cz=Math.max(c[1],Math.min(p.z,c[3]));
   let dx=p.x-cx,dz=p.z-cz,d2=dx*dx+dz*dz;if(d2<r*r){if(d2<1e-6){p.x+=r;return}const d=Math.sqrt(d2);p.x=cx+dx/d*r;p.z=cz+dz/d*r}};
  for(const c of colliders)one(c);
+ if(!ex)one(DBLK);
  if(!ign)for(const c of closedDoors)one(c);
  p.x=Math.max(-60,Math.min(60,p.x));p.z=Math.max(-26,Math.min(48,p.z));
 }
@@ -555,7 +569,7 @@ function showCard(){const d=pendingCard;if(!d)return;pendingCard=null;
  $('pcard').hidden=false}
 $('pcOk').onclick=()=>{$('pcard').hidden=true};
 function leavePlayer(msg){
- if(mode!=='player')return;setHeld(false);
+ if(mode!=='player')return;setHeld(false);seat=false;phoneUntil=0;try{if(fin.on)endFinale(true)}catch(e){}
  mode=null;cancelAuto();hid=false;frozen=false;fightUntil=0;
  if(myMesh){scene.remove(myMesh);myMesh=null}
  $('hud').hidden=true;$('lobby').hidden=false;
@@ -567,7 +581,7 @@ function startPlayer(){
  mode='player';$('lobby').hidden=true;$('hud').hidden=false;
  myMesh=mkChar(me.role,me.look);scene.add(myMesh);setTag(myMesh,me.name+' · '+ROLES[me.role].th,'#ffffff');
  $('who').innerHTML=esc(me.name)+'<small>'+ROLES[me.role].th+' · ปุ่มหลัก: '+ROLES[me.role].act+'</small>';
- $('btnAct').textContent=ROLES[me.role].act;$('btnAct2').hidden=me.role!=='nurse';
+ $('btnAct').textContent=ROLES[me.role].act;$('btnAct2').hidden=me.role!=='nurse';$('btnSit').hidden=me.role!=='exec';
  pos.x=rnd(-3,3);pos.z=rnd(16,19);camYaw=0;loadCam();
  if(room)room.presence({r:me.role,n:me.name,l:me.look,x:pos.x,z:pos.z,ry:pos.ry,mv:0,adm:null});
 }
@@ -598,7 +612,9 @@ addEventListener('keyup',e=>{key[e.code]=0});
 })();
 $('btnCam').onclick=()=>{const c=$('camset');c.hidden=!c.hidden;if(!c.hidden)camControls($('camsetb'))};
 document.querySelectorAll('.pan').forEach(p=>{const f=p.querySelector('[data-fold]');f.onclick=()=>{p.classList.toggle('fold');f.textContent=p.classList.contains('fold')?'ขยาย':'พับ'};p.querySelector('[data-close]').onclick=()=>{p.hidden=true;p.classList.remove('fold');f.textContent='พับ'}});
-$('btnAct2').onclick=()=>{if(mode!=='player')return;if(phase!=='run'){toast('ยังไม่อยู่ในช่วงซ้อม');return}emit('act',{c:'move'})};
+function sitDesk(){if(mode!=='player')return;if(held){toast('คุณถูกจับเป็นตัวประกัน ขยับไม่ได้');return}if(me.role!=='exec')return;if(seat){seat=false;toast('ลุกจากโต๊ะแล้ว');return}goPath(15.2,9.5,false,()=>{autoPath=[[15.6,7.2],[19.7,7.2],[19.7,9.5]];onArrive=()=>{seat=true;pos.x=19.7;pos.z=9.5;pos.ry=-Math.PI/2;toast('นั่งที่โต๊ะ ผอ. แล้ว')}})}
+$('btnSit').onclick=sitDesk;
+$('btnAct2').onclick=()=>{if(mode!=='player')return;if(phase!=='run'&&phase!=='wait'){toast('ยังไม่อยู่ในช่วงซ้อม');return}emit('act',{c:'move'})};
 $('btnRun').onclick=()=>{run=!run;$('btnRun').textContent=run?'วิ่ง':'เดิน'};
 $('btnAct').onclick=()=>doAction();
 $('btnChat').onclick=()=>{const c=$('chat');c.hidden=!c.hidden;if(!c.hidden)$('chatin').focus()};
@@ -609,8 +625,8 @@ function chatLine(d){sfx('pop');const l=$('chatlog');const p=document.createElem
 /* player action */
 function doAction(){
  if(mode!=='player')return;if(held){toast('คุณถูกจับเป็นตัวประกัน ขยับไม่ได้');return}
- if(phase!=='run'){toast(phase==='pause'?'พักการซ้อมอยู่':phase==='end'?'จบการซ้อมแล้ว':'ยังไม่เริ่มการซ้อม');return}
- if(me.role==='exec'){showMenu([['plan','เปิดใช้แผนเผชิญเหตุ'],['evac','สั่งอพยพ'],['support','ขอกำลังสนับสนุน'],['',' ยกเลิก']],c=>{if(c)emit('act',{c})});return}
+ if(phase!=='run'&&phase!=='wait'){toast(phase==='pause'?'พักการซ้อมอยู่':phase==='end'?'จบการซ้อมแล้ว':'ยังไม่เริ่มการซ้อม');return}
+ if(me.role==='exec'){showMenu([['plan','📞 เปิดใช้แผนเผชิญเหตุ'],['evac','📞 สั่งอพยพ'],['support','📞 ขอกำลังสนับสนุน'],['sit','💺 นั่งโต๊ะ ผอ.'],['',' ยกเลิก']],c=>{if(c==='sit')sitDesk();else if(c){phoneUntil=performance.now()+4500;emit('act',{c})}});return}
  emit('act',{});
 }
 function showMenu(items,cb){
@@ -680,6 +696,7 @@ function updateViews(dt,t){
   if(v.fl&262144){if(!v.blood){const b=new T.Group();[[0,0,.9],[.8,.3,.3],[-.7,.5,.25],[.3,-.8,.3]].forEach(a=>{const c=new T.Mesh(new T.CircleGeometry(a[2],16),new T.MeshBasicMaterial({color:0xc62828,transparent:true,opacity:.9}));c.rotation.x=-Math.PI/2;c.position.set(a[0],0,a[1]);b.add(c)});b.position.set(g.position.x,.05,g.position.z);b.scale.setScalar(.05);b.userData.k=0;scene.add(b);v.blood=b}
    if(v.blood.userData.k<1){v.blood.userData.k=Math.min(1,v.blood.userData.k+dt*.8);v.blood.scale.setScalar(.05+.95*v.blood.userData.k)}}
   if(v.fl&16384){if(!g.userData.rope){const r=new T.Mesh(new T.TorusGeometry(.4,.06,6,16),lam(0xb07a3a));r.rotation.x=Math.PI/2;r.position.y=1.0;g.add(r);g.userData.rope=r}}else if(g.userData.rope){g.remove(g.userData.rope);g.userData.rope=null}
+  if(v.fl&2097152){g.userData.armR.rotation.x=-2.6;g.userData.armR.rotation.z=-.25}
   if((v.fl&512)&&!pose){g.userData.armR.rotation.x=-2.1+Math.sin(t*15)*.8;g.userData.armL.rotation.x=-.4}
   if(pose==='lie'){g.rotation.x=-Math.PI/2;g.userData.ico&&(g.userData.ico.position.set(0,.2,-1.0))}
   setIcon(g,iconFor(v));
@@ -696,7 +713,7 @@ function updateViews(dt,t){
    if(!v){const g=mkChar(q.r,q.l|0);scene.add(g);v={g,x:q.x,z:q.z,ry:q.ry||0,spd:0};remotes.set(p.peer,v);setTag(g,String(q.n||'ผู้เล่น').slice(0,16)+' · '+ROLES[q.r].th,'#ffffff')}
    const ox=v.x,oz=v.z,k=Math.min(1,dt*10);v.x+=((q.x||0)-v.x)*k;v.z+=((q.z||0)-v.z)*k;v.ry=angLerp(v.ry,q.ry||0,k);
    const sp=Math.hypot(v.x-ox,v.z-oz)/Math.max(dt,.001);v.spd+=(sp-v.spd)*.3;
-   v.g.rotation.y=v.ry;v.g.position.set(v.x,0,v.z);v.g.rotation.order='YXZ';animChar(v.g,v.spd,t,q.h?'sit':'');if(q.fa){v.g.userData.armR.rotation.x=-1.7+Math.sin(t*16)*.7;v.g.userData.armL.rotation.x=-1.7+Math.cos(t*16)*.7}
+   v.g.rotation.y=v.ry;v.g.position.set(v.x,0,v.z);v.g.rotation.order='YXZ';animChar(v.g,v.spd,t,(q.h||q.sd)?'sit':'');if(q.ph){v.g.userData.armR.rotation.x=-2.6;v.g.userData.armR.rotation.z=-.25}if(q.fa){v.g.userData.armR.rotation.x=-1.7+Math.sin(t*16)*.7;v.g.userData.armL.rotation.x=-1.7+Math.cos(t*16)*.7}
   }
   for(const [id,v] of remotes)if(!seen.has(id)){scene.remove(v.g);remotes.delete(id)}
  }
@@ -710,9 +727,9 @@ function updateViews(dt,t){
 }
 
 /* local player movement */
-let autoPath=[],autoRun=false,onArrive=null,hid=false,fightUntil=0;
+let autoPath=[],autoRun=false,onArrive=null,hid=false,fightUntil=0,seat=false,phoneUntil=0;
 function cancelAuto(){autoPath=[];onArrive=null}
-function goPath(x,z,r,cb){autoPath=routeTo(pos.x,pos.z,x,z).map(p=>[p[0],p[1]]);autoRun=!!r;onArrive=cb||null;hid=false}
+function goPath(x,z,r,cb){seat=false;autoPath=routeTo(pos.x,pos.z,x,z).map(p=>[p[0],p[1]]);autoRun=!!r;onArrive=cb||null;hid=false}
 function movePlayer(dt){
  let ix=jx,iy=jy;
  if(key.KeyA||key.ArrowLeft)ix-=1;if(key.KeyD||key.ArrowRight)ix+=1;if(key.KeyW||key.ArrowUp)iy-=1;if(key.KeyS||key.ArrowDown)iy+=1;
@@ -721,18 +738,18 @@ function movePlayer(dt){
  if(mode==='player'&&!blocked&&m<=.08&&autoPath.length){
   const g=autoPath[0],ax=g[0]-pos.x,az=g[1]-pos.z,ad=Math.hypot(ax,az);
   if(ad<.45){autoPath.shift();if(!autoPath.length&&onArrive){const f=onArrive;onArrive=null;f()}}
-  else{sp=autoRun?5.6:3.4;pos.x+=ax/ad*sp*dt;pos.z+=az/ad*sp*dt;collide(pos,.45,hid);collide(pos,.45,hid);pos.ry=angLerp(pos.ry,Math.atan2(ax,az),Math.min(1,dt*14))}
+  else{sp=autoRun?5.6:3.4;pos.x+=ax/ad*sp*dt;pos.z+=az/ad*sp*dt;collide(pos,.45,hid,me.role==='exec');collide(pos,.45,hid,me.role==='exec');pos.ry=angLerp(pos.ry,Math.atan2(ax,az),Math.min(1,dt*14))}
  }else if(m>.08&&!blocked){
-  if(mode==='player'&&(autoPath.length||hid)){autoPath=[];onArrive=null;hid=false}
+  if(mode==='player'&&(autoPath.length||hid||seat)){autoPath=[];onArrive=null;hid=false;seat=false}
   const dx=Math.cos(camYaw)*ix+Math.sin(camYaw)*iy,dz=-Math.sin(camYaw)*ix+Math.cos(camYaw)*iy,l=Math.hypot(dx,dz)||1;
   const spd=(run||key.ShiftLeft||key.ShiftRight)?5.6:3.2;sp=spd*m;
-  if(mode==='player'){pos.x+=dx/l*sp*dt;pos.z+=dz/l*sp*dt;collide(pos,.45);pos.ry=angLerp(pos.ry,Math.atan2(dx,dz),Math.min(1,dt*14))}
+  if(mode==='player'){pos.x+=dx/l*sp*dt;pos.z+=dz/l*sp*dt;collide(pos,.45,false,me.role==='exec');pos.ry=angLerp(pos.ry,Math.atan2(dx,dz),Math.min(1,dt*14))}
   else adminMove(dx/l,dz/l,sp,dt);
  }
  pos.spd=held?1.6:sp;
  if(mode==='player'&&myMesh){
   const tt=performance.now()/1000;myMesh.rotation.y=pos.ry;myMesh.position.set(pos.x,0,pos.z);
-  animChar(myMesh,sp,tt,hid?'sit':'');
+  animChar(myMesh,sp,tt,(hid||seat)?'sit':'');if(performance.now()<phoneUntil){myMesh.userData.armR.rotation.x=-2.6;myMesh.userData.armR.rotation.z=-.25}
   if(performance.now()<fightUntil){myMesh.userData.armR.rotation.x=-1.7+Math.sin(tt*16)*.7;myMesh.userData.armL.rotation.x=-1.7+Math.cos(tt*16)*.7}
   camT.x+=(pos.x-camT.x)*Math.min(1,dt*8);camT.z+=(pos.z-camT.z)*Math.min(1,dt*8)}
 }
@@ -754,6 +771,11 @@ function zigzag(path){
 }
 function playerFlee(){
  if(phase==='end')return;if(held){toast('คุณถูกจับเป็นตัวประกัน ขยับไม่ได้');return}
+ if(phase==='run'){emit('act',{c:'flee'});toast('ส่งคำขอ "หนี" ให้แอดมินแล้ว รออนุมัติ...');return}
+ doFlee();
+}
+function doFlee(){
+ if(phase==='end')return;if(held)return;
  const ex=[DOORS['lobby-out'],DOORS['er-out'],DOORS['ward-out']];let dn=1e9;ex.forEach(d=>{dn=Math.min(dn,Math.hypot(d[0]-pos.x,d[1]-pos.z))});
  if(dn<9||zoneOf(pos.x,pos.z)==='out'){const a=asmPt();goPath(a[0],a[1],true,()=>toast('ถึงจุดรวมพล '+'AB'[asmSide]+' แล้ว'));toast('ใกล้ทางออก วิ่งไปจุดรวมพล '+'AB'[asmSide]+' (จุดสีเขียวที่ปลอดภัย)')}
  else{
@@ -762,18 +784,20 @@ function playerFlee(){
   autoPath=zigzag(path);autoRun=true;hid=false;onArrive=()=>toast('ถึงที่ปลอดภัยแล้ว กด "ซ่อน" เพื่อปิดประตูห้อง',3500);
   toast('ไกลทางออก วิ่งหนีไปพื้นที่ปลอดภัยใกล้ ๆ');
  }
- emit('act',{c:'flee'});
-}
-function playerHide(){if(phase==='end')return;if(held){toast('คุณถูกจับเป็นตัวประกัน ขยับไม่ได้');return}if(hid){hid=false;toast('ออกจากที่ซ่อน');return}const h=pickHide(pos.x,pos.z);
+ }
+function playerHide(){if(phase==='end')return;if(held){toast('คุณถูกจับเป็นตัวประกัน ขยับไม่ได้');return}if(hid){hid=false;toast('ออกจากที่ซ่อน');return}
+ if(phase==='run'){emit('act',{c:'hide'});toast('ส่งคำขอ "ซ่อน" ให้แอดมินแล้ว รออนุมัติ...');return}
+ doHide()}
+function doHide(){if(phase==='end'||held)return;const h=pickHide(pos.x,pos.z);
  if(Math.hypot(h[0]-pos.x,h[1]-pos.z)<2.5){cancelAuto();hid=true;toast('ซ่อนตัวแล้ว ประตูห้องปิด (ขยับเพื่อออก)')}
  else{goPath(h[0],h[1],true,()=>{hid=true;toast('ซ่อนตัวแล้ว ประตูห้องปิด (ขยับเพื่อออก)')});toast('วิ่งไปซ่อน')}
- emit('act',{c:'hide'})}
+ }
 function playerFight(){if(held){toast('คุณถูกจับเป็นตัวประกัน ขยับไม่ได้');return}if(phase!=='run'){toast('ยังไม่อยู่ในช่วงซ้อม');return}emit('act',{c:'fight'});toast('ส่งคำขอ "สู้" ให้แอดมินอนุมัติแล้ว รอสักครู่',3500)}
 $('btnFlee').onclick=playerFlee;$('btnHide').onclick=playerHide;$('btnFight').onclick=playerFight;
 let lastPres=0;
 function syncPresence(t){
  if(mode!=='player'||!room||t-lastPres<.1)return;lastPres=t;
- room.presence({r:me.role,n:me.name,l:me.look,x:Math.round(pos.x*10)/10,z:Math.round(pos.z*10)/10,ry:Math.round(pos.ry*100)/100,mv:pos.spd>0?1:0,h:hid?1:0,fa:performance.now()<fightUntil?1:0}).catch(()=>{});
+ room.presence({r:me.role,n:me.name,l:me.look,x:Math.round(pos.x*10)/10,z:Math.round(pos.z*10)/10,ry:Math.round(pos.ry*100)/100,mv:pos.spd>0?1:0,h:hid?1:0,sd:seat?1:0,ph:performance.now()<phoneUntil?1:0,fa:performance.now()<fightUntil?1:0}).catch(()=>{});
 }
 
 /* player-side network handlers */
@@ -797,7 +821,9 @@ function wireNet(){
   else if(d.t==='hostage'){setHeld(!!d.on)}
   else if(d.t==='drag'){if(held){pos.x+=(d.x-pos.x)*.7;pos.z+=(d.z-pos.z)*.7;pos.ry=d.ry}}
   else if(d.t==='card'){pendingCard=d;if(!fin.on)showCard()}
-  else if(d.t==='kick'){leavePlayer('แอดมินให้ออกจากห้องซ้อม')}
+  else if(d.t==='dofl'){doFlee()}
+  else if(d.t==='dohd'){doHide()}
+  else if(d.t==='kick'){leavePlayer(d.m||'แอดมินให้ออกจากห้องซ้อม')}
   else if(d.t==='frz'){frozen=!!d.v;toast(frozen?'แอดมินล็อกการเคลื่อนที่':'ปลดล็อกแล้ว')}});
  room.on('chat',m=>{if(m.data)chatLine(m.data);if(mode==='admin'&&m.data)adminChatLog(m.data)});
  room.on('act',m=>{if(mode==='admin')adminAct(m)});
@@ -889,7 +915,8 @@ const ADM={multi:new Set(),mp:new Set(),follow:true,frz:{},sel:null,ctl:false,ta
 let escorts=[],esCar=null,npcs=[],fires=[],nid=1,fid=1,t0=0,tEnd=0,banner='',bannerSeq=0,msns=[],mid=1,logs=[],evTimes=[],notes='',fireStart=0,fireOut=0;
 const HOME={er:[-22,-12,-11,10],ward:[29,-12,39,10],lobby:[-7,-12,7,10],pharm:[11,-12,19,-3],admin:[10.5,0.5,13.5,10],entr:[-14,14,14,19],get assembly(){const b=ASMP[asmSide];return [b[0]-5.5,b[1]-3,b[0]+5.5,b[1]+5.5]},bay:[-58,-8,-46,4]};
 const SPEC={elder:.9,injured:1,bed:0,suspect:2.2};
-function lg(k,who,role,d,ok){logs.push({t:Date.now(),k,who:who||'',role:role||'',d:d||'',ok:ok===undefined?1:ok})}
+let LG_OFF=0;
+function lg(k,who,role,d,ok){if(LG_OFF)return;logs.push({t:Date.now(),k,who:who||'',role:role||'',d:d||'',ok:ok===undefined?1:ok})}
 function fmt(ms){const s=Math.max(0,Math.round(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function okPt(x,z){for(const c of colliders){if(x>c[0]-.9&&x<c[2]+.9&&z>c[1]-.9&&z<c[3]+.9)return false}return true}
 function inZone(z){const h=HOME[z];let p;for(let i=0;i<16;i++){p={x:rnd(h[0],h[2]),z:rnd(h[1],h[3])};if(okPt(p.x,p.z))return p}return p}
@@ -899,6 +926,7 @@ function addNpc(tp,zone,at){
  let p=at||inZone(zone);
  if(tp==='bed'){const b=BED[(n.id-1)%BED.length];p={x:b[0],z:b[1]};n.mode='still';n.st=3;n.ry=0;n.home='ward'}
  else if(tp==='elder'&&zone==='lobby'&&!at){const x=[-6,-2.5,2.5,6][n.id%4];p={x:x,z:4.6};n.mode='still';n.st=2;n.ry=0}
+ else if(tp==='director'){if(npcs.some(q=>q.tp==='director'&&!q.gone)){n.mode='still';n.st=0}else{p={x:19.7,z:9.5};n.mode='still';n.st=2;n.ry=-Math.PI/2;n.home='admin'}}
  else if(tp==='injured'){n.mode='still';n.st=Math.random()<.5?3:2}
  else if(tp==='suspect'){n.home='lobby'}
  n.x=p.x;n.z=p.z;npcs.push(n);return n}
@@ -907,12 +935,12 @@ function npcPacket(){
 }
 function steer(n,dx,dz,d,sp,dt){
  const ox=n.x,oz=n.z,step=sp*dt;
- n.x+=dx/d*step;n.z+=dz/d*step;collide(n,.4);collide(n,.4);
+ n.x+=dx/d*step;n.z+=dz/d*step;collide(n,.4,0,n.tp==='director');collide(n,.4,0,n.tp==='director');
  const prog=((n.x-ox)*dx+(n.z-oz)*dz)/d;
  if(prog<step*.45){
   n.sd=n.sd||(Math.random()<.5?1:-1);
   const a=n.sd*1.1,c=Math.cos(a),sn=Math.sin(a);
-  n.x=ox;n.z=oz;n.x+=(dx*c-dz*sn)/d*step;n.z+=(dx*sn+dz*c)/d*step;collide(n,.4);collide(n,.4);n.sdT=.9;
+  n.x=ox;n.z=oz;n.x+=(dx*c-dz*sn)/d*step;n.z+=(dx*sn+dz*c)/d*step;collide(n,.4,0,n.tp==='director');collide(n,.4,0,n.tp==='director');n.sdT=.9;
  }else if(n.sdT>0){n.sdT-=dt;if(n.sdT<=0)n.sd=0}
  const mx=n.x-ox,mz=n.z-oz;if(mx*mx+mz*mz>1e-7)n.ry=angLerp(n.ry,Math.atan2(mx,mz),Math.min(1,dt*9));
 }
@@ -950,8 +978,8 @@ function updThreat(){
  if(m==='E')side=0;else if(m==='W')side=1;
  else{const s=npcs.find(q=>q.tp==='suspect'&&!q.gone&&!(q.fl&8));
   if(s){const dA=Math.hypot(s.x-ASMP[0][0],s.z-ASMP[0][1]),dB=Math.hypot(s.x-ASMP[1][0],s.z-ASMP[1][1]);
-   if(asmSide===0&&dB>dA+8)side=1;else if(asmSide===1&&dA>dB+8)side=0}}
- if(side!==asmSide){setAsmSide(side);const m2='คนร้ายอยู่ใกล้อีกฝั่ง ใช้จุดรวมพล '+'AB'[side]+' ที่ปลอดภัย';if(phase==='run')setBanner(m2);else toast(m2)}
+   if(dA<dB-3)side=1;else if(dB<dA-3)side=0}}
+ if(side!==asmSide){setAsmSide(side);const m2='คนร้ายเข้าใกล้จุด '+'AB'[1-side]+' จุดรวมพล '+'AB'[side]+' ปลอดภัย (เขียว)';if(phase==='run')setBanner(m2);else toast(m2)}
 }
 let formT=0,foC=0;
 const plazaOf=(x,z)=>{for(let i=0;i<2;i++){const b=ASMP[i];if(Math.abs(x-b[0])<=6.5&&Math.abs(z-b[1])<=6.5)return i}return -1};
@@ -1006,7 +1034,7 @@ function adminTick(dt,t){
   }
  }
  if(live){formTick(dt);escortTick(dt);fightTick(dt);doorLogic();introTick(dt)}
- if(phase==='run')hostageTick(dt);
+ if(phase==='run'){hostageTick(dt);breakTick(dt)}
  if(phase==='run')moveTick(dt);
  panicT-=dt;
  if(phase==='run'&&panicT<=0){panicT=.6;
@@ -1124,7 +1152,7 @@ let fights=[];let roomOpen=true;let intro=null,npcCleared=false,pstat={};ADM.aut
 const POST={x:-37.4,z:35.4},DEADP={x:-36.0,z:37.0};
 function introStart(){
  if(intro){toast('กำลังเล่นฉากเปิดเหตุการณ์อยู่');return}
- setAsmSide(0);
+ setAsmSide(1);
  let g=npcs.find(n=>n.tp==='guard'&&!n.gone&&!(n.fl&262144));
  if(!g)g=addNpc('guard','entr',{x:POST.x,z:POST.z});
  g.mode='still';g.route=[];g.tx=null;g.st=0;g.x=POST.x;g.z=POST.z;g.claim=1;g.leave=0;g.job=null;
@@ -1167,13 +1195,18 @@ function sendCards(){
 }
 
 /* ---- จับตัวประกัน: ผู้ก่อเหตุจับคนที่เดินชน/ตัวติดกัน แล้วลากไปด้วย ---- */
-let hostages=[],hsT=0,incT=0,arrT=0,execAt={};
+let hostages=[],tiedH=[],tiedT=0,hsT=0,incT=0,arrT=0,execAt={};
 function grabHostage(s,h){
  s.hslow=1;
  if(h.peer){h.kind='p';emit('cmd',{to:h.peer,t:'hostage',on:1});const ps=(pstat[h.peer]=pstat[h.peer]||{ok:0,miss:0,run:0,hide:0,fight:0});ps.held=(ps.held||0)+1}
  else{h.kind='n';h.npc.fl|=524288;h.npc.job=null;h.npc.claim=1;h.npc.route=[];h.npc.tx=null;h.npc.mode='still';h.npc.fl&=~(64|128|256)}
  h.s=s;hostages.push(h);
  lg('evt','','','ผู้ก่อเหตุจับ '+h.name+' เป็นตัวประกัน');
+}
+function freeTied(h,why){
+ if(h.kind==='p')emit('cmd',{to:h.peer,t:'hostage',on:0});
+ else{h.npc.fl&=~(524288|16384);h.npc.claim=0;h.npc.hold=0;npcFlee(h.npc)}
+ lg('evt','ตำรวจ','',why+' '+h.name);
 }
 function releaseHostages(s){
  hostages=hostages.filter(h=>{
@@ -1182,6 +1215,13 @@ function releaseHostages(s){
   if(h.kind==='p')emit('cmd',{to:h.peer,t:'hostage',on:0});
   else{h.npc.fl&=~524288;h.npc.claim=0;npcFlee(h.npc)}
   lg('evt','','','ปล่อยตัวประกัน '+h.name);return false});
+ if(!s){tiedH.forEach(h=>freeTied(h,'ปล่อยตัวประกันที่ถูกมัด'));tiedH=[]}
+}
+function tieGroup(s){
+ const g=hostages.filter(h=>h.s===s);if(g.length<5)return;
+ hostages=hostages.filter(h=>h.s!==s);s.hslow=0;s.gcd=4;
+ g.forEach(h=>{if(h.kind==='n'){h.npc.fl|=(524288|16384);h.npc.mode='still';h.npc.st=0;h.npc.route=[];h.npc.tx=null;h.npc.claim=1}tiedH.push(h)});
+ lg('evt','','','ผู้ก่อเหตุจับตัวประกันครบ '+g.length+' คน มัดรวมไว้ที่เดิม');
 }
 function hostageTick(dt){
  if(phase!=='run')return;
@@ -1189,21 +1229,50 @@ function hostageTick(dt){
  for(const s of sus){
   s.hcd=Math.max(0,(s.hcd||0)-dt);
   s.gcd=Math.max(0,(s.gcd||0)-dt);
-  if(hostages.filter(h=>h.s===s).length<4&&!s.hcd&&!s.gcd){
+  if(hostages.filter(h=>h.s===s).length<5&&!s.hcd&&!s.gcd){
    let best=null,bd=1.05;
-   if(room)for(const p of room.peers()){const q=p.presence;if(!q||!ROLES[q.r]||q.fa||hostages.some(h=>h.peer===p.peer))continue;const d=Math.hypot(q.x-s.x,q.z-s.z);if(d<bd){bd=d;best={peer:p.peer,name:(q.n||'ผู้เล่น')+' ('+ROLES[q.r].th+')'}}}
-   for(const n of npcs){if(n.gone||n.cmd||n===s||n.tp==='suspect'||n.tp==='bed'||n.tp==='police'||n.st===3||(n.fl&(4|8|524288))||n.fighting||n.esc||n.leave)continue;
-    if(hostages.some(h=>h.npc===n))continue;const d=Math.hypot(n.x-s.x,n.z-s.z);if(d<Math.min(bd,.95)){bd=d;best={npc:n,name:NT[n.tp].th+' '+n.id}}}
-   if(best){grabHostage(s,best);s.gcd=1.5}
+   if(room)for(const p of room.peers()){const q=p.presence;if(!q||!ROLES[q.r]||q.fa||hostages.some(h=>h.peer===p.peer)||tiedH.some(h=>h.peer===p.peer))continue;if(inDirRoom(q.x,q.z))continue;const d=Math.hypot(q.x-s.x,q.z-s.z);if(d<bd){bd=d;best={peer:p.peer,name:(q.n||'ผู้เล่น')+' ('+ROLES[q.r].th+')'}}}
+   for(const n of npcs){if(n.gone||n.cmd||n===s||n.tp==='suspect'||n.tp==='director'||n.dead||(n.fl&262144)||(n.st===3&&n.tp!=='bed')||(n.fl&(4|8|524288))||n.fighting||n.esc||n.leave)continue;
+    if(inDirRoom(n.x,n.z)||hostages.some(h=>h.npc===n))continue;const d=Math.hypot(n.x-s.x,n.z-s.z);if(d<Math.min(bd,.95)){bd=d;best={npc:n,name:NT[n.tp].th+' '+n.id}}}
+   if(best){grabHostage(s,best);s.gcd=1.5;tieGroup(s)}
   }
  }
  for(const h of hostages.slice()){
   const s=h.s,hi=hostages.filter(q=>q.s===s).indexOf(h);
-  if(!npcs.includes(s)||s.gone||(s.fl&8)||s.fightLock||(h.kind==='n'&&(h.npc.gone||!npcs.includes(h.npc)))||(h.kind==='p'&&!(room&&room.peers().some(p=>p.peer===h.peer)))){releaseHostages(s);continue}
+  if(!npcs.includes(s)||s.gone||(s.fl&8)||(h.kind==='n'&&(h.npc.gone||!npcs.includes(h.npc)))||(h.kind==='p'&&!(room&&room.peers().some(p=>p.peer===h.peer)))){releaseHostages(s);continue}
+  if(s.fightLock)continue;
   const off=.95+hi*.85,sw=hi?(hi%2?.5:-.5):0,tx=s.x-Math.sin(s.ry)*off+Math.cos(s.ry)*sw,tz=s.z-Math.cos(s.ry)*off-Math.sin(s.ry)*sw;
   if(h.kind==='n'){const n=h.npc;n.x+=(tx-n.x)*Math.min(1,dt*8);n.z+=(tz-n.z)*Math.min(1,dt*8);n.ry=s.ry;n.st=1;n.mode='still'}
   else{h.t=(h.t||0)-dt;if(h.t<=0){h.t=.1;emit('cmd',{to:h.peer,t:'drag',x:tx,z:tz,ry:s.ry})}}
  }
+ if(tiedH.length){
+  tiedT-=dt;
+  const pols=[];for(const n of npcs)if(n.tp==='police'&&!n.gone&&!n.esc)pols.push({x:n.x,z:n.z});
+  if(room)for(const p of room.peers()){const q=p.presence;if(q&&q.r==='police')pols.push({x:q.x,z:q.z})}
+  tiedH=tiedH.filter(h=>{
+   if(h.kind==='n'&&(h.npc.gone||!npcs.includes(h.npc)))return false;
+   let px,pz;
+   if(h.kind==='n'){px=h.npc.x;pz=h.npc.z}else{const pr=room&&room.peers().find(p=>p.peer===h.peer);if(!pr||!pr.presence)return false;px=pr.presence.x;pz=pr.presence.z}
+   if(pols.some(q=>Math.hypot(q.x-px,q.z-pz)<2.8)){freeTied(h,'ตำรวจช่วยตัวประกันที่ถูกมัด');return false}
+   return true});
+  if(tiedT<=0){tiedT=4;const idle=npcs.filter(n=>n.tp==='police'&&!n.gone&&!n.esc&&!n.claim&&!n.job&&!n.fighting&&n.mode!=='route');
+   const tg=tiedH.find(h=>h.kind==='n');if(tg&&idle.length){const o=idle.sort((a,b)=>Math.hypot(a.x-tg.npc.x,a.z-tg.npc.z)-Math.hypot(b.x-tg.npc.x,b.z-tg.npc.z))[0];sendTo(o,tg.npc.x+1,tg.npc.z,4)}}
+ }
+}
+const inDirRoom=(x,z)=>x>13.8&&x<21&&z>6.4&&z<12.2;
+let breakIn=false,breakT=0;
+function breakTick(dt){
+ if(phase!=='run'||!t0)return;
+ const s=npcs.find(q=>q.tp==='suspect'&&!q.gone&&!(q.fl&8)&&!q.fightLock&&!q.intro);
+ const on=!!s&&(adj(Date.now())-t0)>300000;
+ if(on&&!breakIn){breakIn=true;lg('evt','','','ผ่านไป 5 นาทีแล้วยังจับกุมไม่ได้ ผู้ก่อเหตุเริ่มบุกพังประตูเข้าไปจับคนในห้องต่างๆ');setBanner('ผู้ก่อเหตุกำลังบุกพังประตูเข้าห้องต่างๆ ภายในอาคาร')}
+ if(!on){if(!s)breakIn=false;return}
+ breakT-=dt;if(breakT>0)return;breakT=3;
+ if(s.mode==='route'&&s.route.length)return;
+ let best=null,bd=1e9;
+ for(const n of npcs){if(n.gone||n===s||n.tp==='suspect'||n.tp==='director'||n.dead||(n.fl&(4|8|524288))||n.esc)continue;const k=zoneOf(n.x,n.z);if(k==='out'||k==='back'||inDirRoom(n.x,n.z))continue;const d=Math.hypot(n.x-s.x,n.z-s.z);if(d<bd){bd=d;best={x:n.x,z:n.z}}}
+ if(room)for(const p of room.peers()){const q=p.presence;if(!q||!ROLES[q.r]||q.fa)continue;const k=zoneOf(q.x,q.z);if(k==='out'||k==='back'||inDirRoom(q.x,q.z))continue;const d=Math.hypot(q.x-s.x,q.z-s.z);if(d<bd){bd=d;best={x:q.x,z:q.z}}}
+ if(best){s.sp2=3.8;sendTo(s,best.x,best.z,1)}
 }
 function cutAll(){
  fights.forEach(f=>{f.fs.forEach(q=>{q.fighting=0;q.fl&=~4096});f.s.fightLock=0;if(f.police)f.police.claim=0});fights=[];
@@ -1224,7 +1293,7 @@ function startFight(who){
  while(helpers.length<needH){const e=addNpc('staff','entr');e.sp2=0;helpers.push(e)}
  f.fs.push(...helpers);
  f.fs.forEach(q=>{q.fighting=1;q.job=null;q.hold=0;q.tx=null;q.fl&=~(64|128|256);q.route=[];sendTo(q,s.x+rnd(-1.4,1.4),s.z+rnd(-1.4,1.4),4)});
- releaseHostages(s);s.fightLock=1;s.mode='still';s.route=[];s.tx=null;s.st=0;
+ s.fightLock=1;s.mode='still';s.route=[];s.tx=null;s.st=0;
  const pol=npcs.filter(q=>q.tp==='police'&&!q.gone&&!q.esc).sort((a,b)=>Math.hypot(a.x-s.x,a.z-s.z)-Math.hypot(b.x-s.x,b.z-s.z))[0];
  if(pol){f.police=pol;pol.claim=1;sendTo(pol,s.x+rnd(-2,2),s.z+rnd(-2,2),4)}
  if(f.peer){emit('cmd',{to:f.peer,t:'go',x:s.x+1.2,z:s.z,r:1})}
@@ -1269,6 +1338,7 @@ function fightTick(dt){
 /* ---- ประตูห้องปิดจริงเมื่อมีคนซ่อนอยู่ข้างใน ---- */
 function doorLogic(){
  for(const k of DOORK){
+  if(breakIn){applyDoor(k,false);continue}
   const room_=k.split('-')[0];let hid_=false;
   for(const n of npcs){if(!n.gone&&(n.fl&128)&&n.st===2&&!n.route.length&&zoneOf(n.x,n.z)===room_){hid_=true;break}}
   if(!hid_&&room)for(const p of room.peers()){const q=p.presence;if(q&&q.h&&ROLES[q.r]&&zoneOf(q.x,q.z)===room_){hid_=true;break}}
@@ -1277,10 +1347,14 @@ function doorLogic(){
 }
 /* ---- ผู้เล่นกดปุ่ม → รออนุมัติ ---- */
 let pending=[],apid=1;
+let apprN=0;
 function renderAppr(){
  const el=$('appr');if(!el)return;el.hidden=!pending.length||mode!=='admin';
- el.innerHTML=pending.map(a=>`<div class="apr"><div><b>${esc(a.who)}</b> <span class="pill">${esc(a.th)}</span></div><div>${esc(a.txt)}</div><div class="row"><button class="btn sm" data-ap="${a.id}" data-y="1">อนุมัติ</button><button class="btn sm red" data-ap="${a.id}" data-y="0">ปฏิเสธ</button></div></div>`).join('');
+ el.innerHTML=(pending.length>1?'<div class="row"><b style="flex:1">🔔 คำขออนุมัติ '+pending.length+' รายการ</b><button class="btn sm" data-all="1">✔ อนุมัติทั้งหมด</button></div>':'')+pending.map(a=>`<div class="apr"><div><b>${esc(a.who)}</b> <span class="pill">${esc(a.th)}</span></div><div>${esc(a.txt)}</div><div class="row"><button class="btn sm" data-ap="${a.id}" data-y="1">อนุมัติ</button><button class="btn sm red" data-ap="${a.id}" data-y="0">ปฏิเสธ</button></div></div>`).join('');
  el.querySelectorAll('[data-ap]').forEach(b=>b.onclick=()=>approve(+b.dataset.ap,b.dataset.y==='1'));
+ const all=el.querySelector('[data-all]');if(all)all.onclick=()=>pending.slice().forEach(a=>approve(a.id,true));
+ if(pending.length>apprN&&mode==='admin'){const ad=$('adm');if(ad&&ad.classList.contains('fold')){ad.classList.remove('fold');const fb=$('admFold');if(fb)fb.textContent='◀ พับ'}}
+ apprN=pending.length;
 }
 function approve(id,yes,timeout){
  const i=pending.findIndex(a=>a.id===id);if(i<0)return;const a=pending.splice(i,1)[0];renderAppr();
@@ -1291,6 +1365,8 @@ function approve(id,yes,timeout){
  }
 }
 function actLabel(role,d){
+ if(d.c==='flee')return 'ขอ "หนี" ไปจุดปลอดภัย';
+ if(d.c==='hide')return 'ขอ "ซ่อน" ตัว';
  if(d.c==='fight')return 'ขอ "สู้" กับผู้ก่อเหตุ';
  if(d.c==='move')return 'ขอสั่งเคลื่อนย้ายคนไข้ไปโซนปลอดภัย';
  if(role==='exec'){return {plan:'ขอเปิดใช้แผนเผชิญเหตุ',evac:'ขอสั่งอพยพทุกคน',support:'ขอกำลังสนับสนุนจากภายนอก'}[d.c]||'ขอใช้ปุ่มหน้าที่'}
@@ -1325,21 +1401,28 @@ function escortTick(dt){
 /* player actions resolved by admin */
 const nearest=(x,z,f,r)=>{let b=null,bd=r;for(const n of npcs){if(n.gone||!f(n))continue;const d=Math.hypot(n.x-x,n.z-z);if(d<bd){bd=d;b=n}}return b};
 function reply(peer,m,ok){if(room)room.emit('res',{to:peer,m,ok:ok?1:0}).catch(()=>{})}
+const LIGHT_ACT=(role,d)=>role==='doctor'||(role==='nurse'&&d.c!=='move');
 function adminAct(msg){
  const p=room.peers().find(q=>q.peer===msg.peer);if(!p||!p.presence||!ROLES[p.presence.r])return;
  const role=p.presence.r,who=p.presence.n||'ผู้เล่น',th=ROLES[role].th,d=msg.data||{};
+ if(phase==='wait'){execAct(msg,d);return}
  if(phase!=='run'){reply(msg.peer,'ยังไม่อยู่ในช่วงซ้อม',0);return}
- const pp=(pstat[msg.peer]=pstat[msg.peer]||{ok:0,miss:0,run:0,hide:0,fight:0});
- if(d.c==='flee'){pp.run++;RHF.run++;lg('evt',who,th,'เลือก "หนี" ออกจากอาคาร');return}
- if(d.c==='hide'){pp.hide++;RHF.hide++;lg('evt',who,th,'เลือก "ซ่อน"');return}
+ const gate=(d.c==='flee'||d.c==='hide')?ADM.gateFH!==false:!LIGHT_ACT(role,d);
+ if(!gate){execAct(msg,d);return}
  pending=pending.filter(a=>a.msg.peer!==msg.peer);
  const a={id:apid++,msg,d,who,th,txt:actLabel(role,d),t:Date.now()};pending.push(a);renderAppr();sfx('notify');toast('มีคำขออนุมัติจาก '+who);
  reply(msg.peer,'ส่งคำขอให้แอดมินแล้ว รออนุมัติ...',1);
 }
 function execAct(msg,d){
+ const test=phase==='wait';
+ if(test)LG_OFF=1;
+ try{execAct0(msg,d,test)}finally{LG_OFF=0}
+}
+function execAct0(msg,d,test){
  const p=room.peers().find(q=>q.peer===msg.peer);if(!p||!p.presence||!ROLES[p.presence.r])return;
  const role=p.presence.r,who=p.presence.n||'ผู้เล่น',x=p.presence.x,z=p.presence.z,th=ROLES[role].th;
- if(phase!=='run'){reply(msg.peer,'ยังไม่อยู่ในช่วงซ้อม',0);return}
+ if(phase!=='run'&&!test){reply(msg.peer,'ยังไม่อยู่ในช่วงซ้อม',0);return}
+ if(d.c==='flee'||d.c==='hide'){const pp0=(pstat[msg.peer]=pstat[msg.peer]||{ok:0,miss:0,run:0,hide:0,fight:0});if(d.c==='flee'){pp0.run++;RHF.run++}else{pp0.hide++;RHF.hide++}lg('evt',who,th,'ได้รับอนุมัติ "'+(d.c==='flee'?'หนี':'ซ่อน')+'"');emit('cmd',{to:msg.peer,t:d.c==='flee'?'dofl':'dohd'});return}
  let ok=0,m='',det='';
  const med=n=>NT[n.tp].need==='med';
  if(d.c==='fight'){const r=startFight({peer:msg.peer,x,z});ok=r.ok;m=r.m;det=r.ok?'แอดมินอนุมัติ: ผู้เล่นร่วมต่อสู้กับผู้ก่อเหตุ':m}
@@ -1356,7 +1439,7 @@ function execAct(msg,d){
  else if(role==='porter'||role==='assistant'){const r=dispatchMove('ptr',msg.peer);ok=r.ok;m=r.m;det=r.ok?'สั่งเคลื่อนย้ายคนไข้และญาติไปโซนปลอดภัย':''}
  else if(role==='exec'){const c=d.c,tx={plan:'เปิดใช้แผนเผชิญเหตุ',evac:'สั่งอพยพทุกคนไปจุดรวมพล',support:'ขอกำลังสนับสนุนจากภายนอก'}[c];
   if(tx){ok=1;execAt.any=execAt.any||Date.now();execAt[c]=execAt[c]||Date.now();m='ประกาศ: '+tx;det=tx;setBanner('ผู้บริหารสั่งการ: '+tx);if(c==='evac')evacAll()}else m='ยกเลิก'}
- {const pp=(pstat[msg.peer]=pstat[msg.peer]||{ok:0,miss:0,run:0,hide:0,fight:0});if(ok)pp.ok++;else pp.miss++;if(d.c==='fight'&&ok)pp.fight++}
+ if(!test){const pp=(pstat[msg.peer]=pstat[msg.peer]||{ok:0,miss:0,run:0,hide:0,fight:0});if(ok)pp.ok++;else pp.miss++;if(d.c==='fight'&&ok)pp.fight++}
  lg(ok?'act':'miss',who,th,det||m,ok);
  reply(msg.peer,m,ok);
 }
@@ -1383,7 +1466,7 @@ function evt(kind){
  else if(kind==='sus'){introStart()}
  else if(kind==='asmall'){sendAllAsm()}
  else if(kind==='evac'){evacAll();setBanner('ประกาศอพยพ ไปที่จุดรวมพล')}
- else if(kind==='free'){if(!hostages.length)toast('ไม่มีตัวประกัน');else{releaseHostages();toast('ปล่อยตัวประกันแล้ว')}}
+ 
  else if(kind==='fight'){const s=npcs.find(q=>q.tp==='suspect'&&!q.gone&&!(q.fl&8)&&!q.fightLock);if(!s){toast('ไม่มีผู้ก่อเหตุ กด "ผู้ก่อเหตุวุ่นวาย" ก่อน');return}
   const c=npcs.filter(q=>canCmd(q)&&FLEE.includes(q.tp)&&q.st!==3).sort((a,b)=>Math.hypot(a.x-s.x,a.z-s.z)-Math.hypot(b.x-s.x,b.z-s.z))[0];
   if(!c){toast('ไม่มี NPC ที่สู้ได้');return}const r=startFight({npc:c});toast(r.m)}
@@ -1414,15 +1497,15 @@ function setPhase(p){
  else if(p==='run'&&phase==='pause'){lg('resume','แอดมิน','','ซ้อมต่อ')}
  else if(p==='pause')lg('pause','แอดมิน','','พักการซ้อม');
  else if(p==='end'){tEnd=Date.now();cutAll();lg('end','แอดมิน','','จบการซ้อม')}
- const wasWait=phase==='wait';phase=p;const pk=npcPacket();if(room)room.emit('st',pk).catch(()=>{});setTab(ADM.tab);renderPbar();if(p==='end'){playFinale();sendCards()}
+ const wasWait=phase==='wait';phase=p;const pk=npcPacket();if(room)room.emit('st',pk).catch(()=>{});setTab(ADM.tab);renderPbar();if(p==='end'){playFinale();sendCards();roomOpen=false;setTimeout(()=>{if(room)for(const pr of room.peers()){const q=pr.presence;if(q&&q.r&&ROLES[q.r])emit('cmd',{to:pr.peer,t:'kick',m:'การซ้อมจบแล้ว กลับสู่หน้าแรก กรุณารอแอดมินเริ่มรอบใหม่'})}},600)}
  if(p==='run'&&wasWait&&ADM.autoIntro)introStart();
 }
-function resetAll(){cineIv=[];cineOpen=0;incT=0;arrT=0;execAt={};ADM.manual={};hostages=[];intro=null;npcCleared=true;pstat={};fights=[];pending=[];renderAppr();DOORK.forEach(k=>applyDoor(k,0));RHF.run=RHF.hide=RHF.fight=0;moveOrder=null;moveEver=false;ADM.multi.clear();ADM.mp.clear();escorts=[];esCar=null;npcs=[];fires=[];logs=[];evTimes=[];msns=[];roster.clear();phase='wait';t0=0;tEnd=0;fireStart=0;fireOut=0;ADM.sel=null;ADM.ctl=false;banner='';bannerSeq++;nid=1;setTab('ctl')}
+function resetAll(){cineIv=[];cineOpen=0;incT=0;arrT=0;execAt={};ADM.manual={};hostages=[];tiedH=[];breakIn=false;roomOpen=true;intro=null;npcCleared=true;pstat={};fights=[];pending=[];renderAppr();DOORK.forEach(k=>applyDoor(k,0));RHF.run=RHF.hide=RHF.fight=0;moveOrder=null;moveEver=false;ADM.multi.clear();ADM.mp.clear();escorts=[];esCar=null;npcs=[];fires=[];logs=[];evTimes=[];msns=[];roster.clear();phase='wait';t0=0;tEnd=0;fireStart=0;fireOut=0;ADM.sel=null;ADM.ctl=false;banner='';bannerSeq++;nid=1;setTab('ctl')}
 
 /* ===== admin UI ===== */
 function startAdmin(){
  mode='admin';document.body.classList.add('isadm');$('lobby').hidden=true;$('adm').hidden=false;$('hud').hidden=false;['who','missions','btnAct','btnChat','banner'].forEach(i=>$(i).hidden=true);camPitch=1.0;camDist=42;camT.x=16;camT.z=8;ADM.tx=16;ADM.tz=8;
- if(!npcs.length){addNpc('visitor','lobby');addNpc('visitor','lobby');addNpc('relative','lobby');addNpc('patient','lobby');addNpc('elder','lobby');addNpc('bed','ward');addNpc('bed','ward');addNpc('patient','ward');addNpc('staff','pharm');addNpc('janitor','lobby');addNpc('janitor','ward');addNpc('porter','lobby');addNpc('porter','ward');addNpc('assistant','lobby')}
+ if(!npcs.length){addNpc('visitor','lobby');addNpc('visitor','lobby');addNpc('relative','lobby');addNpc('patient','lobby');addNpc('elder','lobby');addNpc('bed','ward');addNpc('bed','ward');addNpc('patient','ward');addNpc('staff','pharm');addNpc('janitor','lobby');addNpc('janitor','ward');addNpc('porter','lobby');addNpc('porter','ward');addNpc('assistant','lobby');addNpc('director','admin');addNpc('doctor','er');addNpc('nurse','er');addNpc('guard','entr')}
  if(room)room.presence({adm:1,r:null}).catch(()=>{});
  const tabs=[['ctl','ควบคุม'],['npc','NPC'],['ply','ผู้เล่น'],['qr','QR เชิญ']];
  $('tabs').innerHTML='';tabs.forEach(([k,l])=>{const b=document.createElement('button');b.textContent=l;b.dataset.k=k;b.onclick=()=>setTab(k);$('tabs').appendChild(b)});
@@ -1431,7 +1514,36 @@ function startAdmin(){
 }
 const selOpts=o=>Object.entries(o).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('');
 const zoneOpts=Object.entries(ZONES).map(([k,v])=>`<option value="${k}">${esc(v[2])}</option>`).join('');
-const ANN_PRE=['ประกาศภาวะฉุกเฉิน รหัสดำ (Code Black) ให้ทุกคนปฏิบัติตามแผนเผชิญเหตุ','มีผู้ก่อเหตุในอาคาร ให้ หนี ซ่อน หรือ สู้ ตามความเหมาะสม','ทุกคนออกจากอาคารไปยังจุดรวมพลที่ปลอดภัย','ปิดประตูห้อง ปิดไฟ และซ่อนตัวอย่างเงียบ','ห้ามเข้าใกล้ทางเข้าหลักของโรงพยาบาล','ตำรวจมาถึงแล้ว ให้ปฏิบัติตามคำสั่งของเจ้าหน้าที่','ผู้ก่อเหตุถูกควบคุมตัวแล้ว สถานการณ์สงบ','ขอให้ผู้บริหารเปิดใช้แผนเผชิญเหตุ'];
+const ANN_PRE=['ประกาศภาวะฉุกเฉิน รหัสดำ (Code Black) ให้ทุกคนปฏิบัติตามแผนเผชิญเหตุ','Code Red: เกิดอัคคีภัย ให้ทุกคนออกจากอาคารตามเส้นทางหนีไฟ','Code Blue: ผู้ป่วยหยุดหายใจ ทีมช่วยฟื้นคืนชีพไปที่จุดเกิดเหตุ','Code Pink: เด็กหายหรือถูกลักพา ปิดทางเข้าออกและตรวจสอบทุกคน','Code Grey: มีบุคคลอาวุธหรือพฤติกรรมรุนแรงในอาคาร','มีผู้ก่อเหตุในอาคาร ให้ หนี ซ่อน หรือ สู้ ตามความเหมาะสม','ทุกคนออกจากอาคารไปยังจุดรวมพลที่ปลอดภัย','ปิดประตูห้อง ปิดไฟ และซ่อนตัวอย่างเงียบ','ห้ามเข้าใกล้ทางเข้าหลักของโรงพยาบาล','ตำรวจมาถึงแล้ว ให้ปฏิบัติตามคำสั่งของเจ้าหน้าที่','ผู้ก่อเหตุถูกควบคุมตัวแล้ว สถานการณ์สงบ','ขอให้ผู้บริหารเปิดใช้แผนเผชิญเหตุ'];
+
+const MS_ZONES=[['asm','🚶 ไปจุดรวมพลที่ปลอดภัย'],['z:er','ไปประจำ ER'],['z:lobby','ไปประจำโถง OPD'],['z:ward','ไปประจำ IPD'],['z:pharm','ไปประจำห้องยา'],['z:admin','ไปประจำห้องบริหาร'],['hide','🤫 ซ่อนตัว'],['flee','🏃 วิ่งหนี'],['calm','ปลอบประชาชนรอบตัว'],['stand','ยืนประจำที่']];
+const MS_ROLE={
+ director:[['codeblack','📢 ประกาศ Code Black (มีผู้ก่อเหตุ)'],['codegrey','📢 ประกาศ Code Grey (บุคคลอาวุธ)'],['codered','📢 ประกาศ Code Red (อัคคีภัย)'],['codeblue','📢 ประกาศ Code Blue (ช่วยฟื้นคืนชีพ)'],['plan','เปิดใช้แผนเผชิญเหตุ'],['evacall','สั่งอพยพทุกคนไปจุดรวมพล'],['callpolice','ประสานตำรวจ 191'],['allclear','ประกาศสถานการณ์สงบ']],
+ doctor:[['aid','ตรวจรักษาผู้บาดเจ็บที่ใกล้ที่สุด']],nurse:[['aid','ปฐมพยาบาลผู้บาดเจ็บที่ใกล้ที่สุด']],
+ guard:[['lead','นำประชาชนรอบตัวอพยพ']],porter:[['lead','พาผู้ป่วยรอบตัวอพยพ']],assistant:[['lead','พาผู้ป่วยรอบตัวอพยพ']],police:[['lead','ควบคุมพื้นที่ ให้ประชาชนรอบตัวอพยพ']]};
+function missionOpts(n){return '<option value="">— เลือกภารกิจ —</option>'+[...(MS_ROLE[n.tp]||[]),...MS_ZONES].map(m=>`<option value="${m[0]}">${esc(m[1])}</option>`).join('')}
+function npcMission(n,k){
+ const near=r=>npcs.filter(c=>!c.gone&&c!==n&&c.tp!=='suspect'&&Math.hypot(c.x-n.x,c.z-n.z)<r);
+ n.job=null;n.tx=null;n.route=[];n.fl&=~64;let txt='';
+ if(n.tp==='director'){n.fl|=2097152;setTimeout(()=>{n.fl&=~2097152},5000)}
+ if(k==='codeblack'){txt='Code Black: ผู้อำนวยการประกาศภาวะฉุกเฉิน มีผู้ก่อเหตุในอาคาร ให้ปฏิบัติตามแผนเผชิญเหตุ หนี ซ่อน สู้';setBanner(txt)}
+ else if(k==='codegrey'){txt='Code Grey: ผู้อำนวยการประกาศ มีบุคคลอาวุธในอาคาร ห้ามเข้าใกล้ ให้หลบซ่อนและรอคำสั่ง';setBanner(txt)}
+ else if(k==='codered'){txt='Code Red: ผู้อำนวยการประกาศอัคคีภัย ให้ทุกคนออกจากอาคารตามเส้นทางหนีไฟ';setBanner(txt)}
+ else if(k==='codeblue'){txt='Code Blue: ผู้อำนวยการประกาศ ทีมช่วยฟื้นคืนชีพไปที่จุดเกิดเหตุ';setBanner(txt)}
+ else if(k==='plan'){txt='ผู้อำนวยการเปิดใช้แผนเผชิญเหตุ ทุกหน่วยปฏิบัติตามบทบาท';setBanner(txt)}
+ else if(k==='evacall'){txt='ผู้อำนวยการสั่งอพยพทุกคนไปจุดรวมพล '+'AB'[asmSide];setBanner(txt);sendAllAsm()}
+ else if(k==='callpolice'){txt='ผู้อำนวยการประสานตำรวจ 191 แจ้งเหตุที่โรงพยาบาลดอนจาน';setBanner(txt)}
+ else if(k==='allclear'){txt='ผู้อำนวยการประกาศ สถานการณ์สงบ ยกเลิกภาวะฉุกเฉิน';setBanner(txt)}
+ else if(k==='asm'){if(canCmd(n)){startEvac(n);txt='ไปจุดรวมพล'}}
+ else if(k.startsWith('z:')){const zk=k.slice(2),p=inZone(zk);sendTo(n,p.x,p.z,1);txt='ไปประจำ '+ZONES[zk][2]}
+ else if(k==='hide'){npcHide(n);txt='ซ่อนตัว'}else if(k==='flee'){npcFlee(n);txt='วิ่งหนี'}
+ else if(k==='stand'){n.mode='still';n.st=0;txt='ยืนประจำที่'}
+ else if(k==='calm'){near(8).forEach(c=>c.fl|=32);txt='ปลอบประชาชนรอบตัว'}
+ else if(k==='lead'){near(14).filter(c=>FLEE.includes(c.tp)).slice(0,8).forEach(c=>startEvac(c));txt='นำคนรอบตัวอพยพ'}
+ else if(k==='aid'){const v=npcs.filter(c=>!c.gone&&NT[c.tp].need==='med'&&!(c.fl&(1|262144))).sort((a,b)=>Math.hypot(a.x-n.x,a.z-n.z)-Math.hypot(b.x-n.x,b.z-n.z))[0];
+  if(v){sendTo(n,v.x+.8,v.z,1);txt='เข้าช่วยผู้บาดเจ็บ '+v.id;const t0_=Date.now(),iv=setInterval(()=>{if(!npcs.includes(n)||!npcs.includes(v)||Date.now()-t0_>40000){clearInterval(iv);return}
+    if(Math.hypot(v.x-n.x,v.z-n.z)<1.8){v.fl|=1;n.mode='still';n.st=0;clearInterval(iv)}},600)}else{txt='ไม่มีผู้บาดเจ็บให้ช่วย';toast(txt)}}
+ if(txt)lg('evt','แอดมิน','','มอบภารกิจ '+NT[n.tp].th+' '+n.id+': '+txt)}
 const MSN_PRE=['ตรวจจุดรับผู้ป่วยหน้า ER','ช่วยเคลื่อนย้ายผู้ป่วยติดเตียงไปโซนปลอดภัย','นำประชาชนไปยังจุดรวมพลที่ปลอดภัย','ปฐมพยาบาลผู้บาดเจ็บ','ล็อกประตูห้องและเฝ้าระวัง','ประสานตำรวจและรายงานตำแหน่งผู้ก่อเหตุ','ตรวจนับจำนวนคนที่จุดรวมพล','ผู้นำทีมรายงานสถานการณ์'];
 const roleOpts='<option value="all">ทุกอาชีพ</option>'+Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${esc(v.th)}</option>`).join('');
 function setTab(k){
@@ -1443,8 +1555,8 @@ function setTab(k){
   <h2>การเข้าร่วมของผู้เล่น</h2><div class="row"><button class="btn sm ${roomOpen?'':'red'}" data-lock="1">${roomOpen?'🔓 เปิดรับผู้เล่นอยู่ (กดเพื่อปิด)':'🔒 ปิดรับผู้เล่นอยู่ (กดเพื่อเปิด)'}</button></div>
   <label class="row" style="gap:8px"><input type="checkbox" id="autoEnd" style="width:20px;height:20px;padding:0" ${ADM.autoEnd===false?'':'checked'}> เมื่อตำรวจนำตัวคนร้ายขึ้นรถ ให้จบการซ้อมและขึ้นหน้าสรุปอัตโนมัติ</label>
   <label class="row" style="gap:8px"><input type="checkbox" id="autoIntro" style="width:20px;height:20px;padding:0" ${ADM.autoIntro?'checked':''}> เมื่อกดเริ่ม ให้เล่นฉากผู้ก่อเหตุเข้ามาทันที</label>
-  <h2>สถานการณ์</h2><div class="row"><button class="btn sm red" data-e="sus">⚠️ ผู้ก่อเหตุบุกเข้ามา (ฉาก)</button><button class="btn sm sun" data-e="evac">🏃 สั่งอพยพ</button><button class="btn sm sun" data-e="asmall">🚶 ทุกคนไปจุดรวมพล</button><button class="btn sm" data-e="move">🛏️ เคลื่อนย้ายคนไข้</button><button class="btn sm sun" data-e="fight">💪 สั่ง NPC รุมสู้ผู้ก่อเหตุ</button><button class="btn sm ghost" data-e="free">🕊 ปล่อยตัวประกัน</button></div>
-  <h2>จุดรวมพล</h2><div class="row"><select id="thr" style="flex:1"><option value="auto">อัตโนมัติ (เลือกจุดที่ไกลคนร้ายกว่า)</option><option value="E">บังคับใช้จุด A (ลานหน้าอาคาร)</option><option value="W">บังคับใช้จุด B (ลาน EMS ข้างอาคาร)</option></select></div><div class="sub" id="thrNow"></div>
+  <h2>สถานการณ์</h2><div class="row"><button class="btn sm red" data-e="sus">⚠️ ผู้ก่อเหตุบุกเข้ามา (ฉาก)</button><button class="btn sm sun" data-e="asmall">🚶 ทุกคนไปจุดรวมพล</button><button class="btn sm" data-e="move">🛏️ เคลื่อนย้ายคนไข้</button><button class="btn sm sun" data-e="fight">💪 สั่ง NPC รุมสู้ผู้ก่อเหตุ</button></div>
+  <h2>จุดรวมพล</h2><div class="row"><select id="thr" style="flex:1"><option value="auto">อัตโนมัติ (จุดที่ใกล้คนร้ายสุดเป็นสีแดงทันที)</option><option value="E">บังคับใช้จุด A (ลานด้านตะวันออก)</option><option value="W">บังคับใช้จุด B (ลานจอดรถ)</option></select></div><div class="sub" id="thrNow"></div>
   <h2>ประกาศถึงทุกคน</h2><div class="row"><select id="ann" style="flex:1"><option value="">— เลือกข้อความประกาศ —</option>${ANN_PRE.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" id="annGo">ส่ง</button></div>
   <h2>มอบหมายภารกิจ</h2><div class="row"><select id="mTo" style="width:auto">${roleOpts}</select><select id="mTx" style="flex:1;min-width:140px"><option value="">— เลือกภารกิจ —</option>${MSN_PRE.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" id="mGo">ส่ง</button></div>
   <div class="list" id="mList"></div><h2>แชท</h2><div class="list" id="aChat" style="font-size:13px;max-height:120px;overflow-y:auto"></div>`;
@@ -1461,13 +1573,14 @@ function setTab(k){
   const n=npcs.find(q=>q.id===ADM.sel);
   B.innerHTML=`<h2>เพิ่มตัวละคร</h2><div class="row"><select id="aT" style="width:auto">${NTK.map(t=>`<option value="${t}">${NT[t].th}</option>`).join('')}</select><select id="aZ" style="width:auto"><option value="rand">สุ่มพื้นที่ในโรงพยาบาล</option>${zoneOpts}</select><input id="aC" type="number" min="1" max="10" value="1" style="width:64px"><button class="btn sm" id="aGo">เพิ่ม</button></div>
   ${n?`<h2>ที่เลือก: ${NT[n.tp].th} ${n.id}</h2><div class="row"><button class="btn sm ${ADM.ctl?'red':''}" id="nCtl">${ADM.ctl?'เลิกควบคุม':'ควบคุมตัวนี้ (จอยสติ๊ก)'}</button><button class="btn sm ghost" data-s="stand">ยืน</button><button class="btn sm ghost" data-s="wander">เดินสุ่ม</button><button class="btn sm ghost" data-s="sit">นั่ง</button><button class="btn sm ghost" data-s="lie">นอน</button></div>
-  <div class="row">${n.tp==='suspect'?'<button class="btn sm red" data-a="arrest">จับกุม</button><button class="btn sm ghost" data-a="free">ปล่อยตัว</button>':''}<button class="btn sm ghost" data-a="evac">สั่งอพยพ</button><button class="btn sm ghost" data-a="calm">ปลอบ</button>${n.tp!=='suspect'?'<button class="btn sm red" data-a="flee">🏃 หนี</button><button class="btn sm ghost" data-a="hide">🤫 ซ่อน</button><button class="btn sm sun" data-a="fight">💪 สู้</button>':''}<button class="btn sm ghost" id="nOff">ยกเลิกเลือก</button></div>
+  <div class="row">${n.tp==='suspect'?'<button class="btn sm red" data-a="arrest">จับกุม</button><button class="btn sm ghost" data-a="free">ปล่อยตัว</button>':''}<button class="btn sm ghost" data-a="calm">ปลอบ</button>${n.tp!=='suspect'?'<button class="btn sm red" data-a="flee">🏃 หนี</button><button class="btn sm ghost" data-a="hide">🤫 ซ่อน</button><button class="btn sm sun" data-a="fight">💪 สู้</button>':''}<button class="btn sm ghost" id="nOff">ยกเลิกเลือก</button></div>
+  ${n&&n.tp!=='suspect'?`<div class="row"><select id="nMs" style="flex:1;min-width:150px">${missionOpts(n)}</select><button class="btn sm sun" id="nMg">มอบภารกิจ</button></div>`:''}
   <p class="sub">แตะพื้นในฉากเพื่อสั่งให้เดินไปที่นั่น</p>
   <div class="row"><select id="nZ" style="width:auto">${zoneOpts}</select><button class="btn sm" id="nGo">ไปที่โซน</button><button class="btn sm" id="nTr">${n.fl&1?'ยกเลิกรักษา':'ตั้งเป็นรักษาแล้ว'}</button><button class="btn sm red" id="nDel">ลบ</button></div>`:'<p class="sub">แตะตัวละครในฉาก หรือเลือกจากรายการ เพื่อควบคุม</p>'}
   <h2>สั่งหลายตัวพร้อมกัน (เลือกแล้ว <span id="mc">0</span>)</h2>
   <div class="row"><button class="btn sm ghost" id="mAll">เลือกทั้งหมด (ยกเว้นคนร้าย)</button><button class="btn sm sun" id="mAsm">🚶 ทุกคนไปจุดรวมพลที่ปลอดภัย</button><button class="btn sm ghost" id="mNone">ล้างที่เลือก</button></div>
   <div class="row"><select id="mZ" style="width:auto">${zoneOpts}</select><button class="btn sm" id="mGo">ไปที่โซน</button></div>
-  <div class="row"><button class="btn sm ghost" data-mb="stand">ยืน</button><button class="btn sm ghost" data-mb="wander">เดินสุ่ม</button><button class="btn sm ghost" data-mb="sit">นั่ง</button><button class="btn sm ghost" data-mb="lie">นอน</button><button class="btn sm ghost" data-mb="evac">อพยพ</button><button class="btn sm ghost" data-mb="calm">ปลอบ</button><button class="btn sm ghost" data-mb="treat">รักษาแล้ว</button><button class="btn sm red" data-mb="flee">🏃 หนี</button><button class="btn sm ghost" data-mb="hide">🤫 ซ่อน</button><button class="btn sm sun" data-mb="fight">💪 สู้</button><button class="btn sm red" data-mb="del">ลบ</button></div>
+  <div class="row"><button class="btn sm ghost" data-mb="stand">ยืน</button><button class="btn sm ghost" data-mb="wander">เดินสุ่ม</button><button class="btn sm ghost" data-mb="sit">นั่ง</button><button class="btn sm ghost" data-mb="lie">นอน</button><button class="btn sm ghost" data-mb="calm">ปลอบ</button><button class="btn sm ghost" data-mb="treat">รักษาแล้ว</button><button class="btn sm red" data-mb="flee">🏃 หนี</button><button class="btn sm ghost" data-mb="hide">🤫 ซ่อน</button><button class="btn sm sun" data-mb="fight">💪 สู้</button><button class="btn sm red" data-mb="del">ลบ</button></div>
   <p class="sub">ติ๊กช่องหน้าชื่อในรายการ แล้วแตะพื้นในฉากเพื่อสั่งให้เดินไปพร้อมกัน · คำสั่งกลุ่มไม่รวมคนร้าย (🔒) คนร้ายต้องแตะที่ตัวในฉากเท่านั้น</p>
   <div class="row"><h2 style="flex:1">รายการ (<span id="nc">0</span>)</h2><button class="btn sm ghost" id="clr">ลบทั้งหมด</button></div><div class="list" id="nList"></div>`;
   const q=s=>B.querySelector(s);
@@ -1492,6 +1605,7 @@ function setTab(k){
   if(n){
    q('#nCtl').onclick=()=>{ADM.ctl=!ADM.ctl;setTab('npc')};
    B.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const s=b.dataset.s;n.route=[];n.tx=null;ADM.ctl=false;n.fl&=~64;if(s==='stand'){n.mode='still';n.st=0}else if(s==='wander'){n.mode='wander';n.st=0;n.home=zoneOf(n.x,n.z)==='out'?'entr':zoneOf(n.x,n.z)}else if(s==='sit'){n.mode='still';n.st=2}else{n.mode='still';n.st=3}});
+   if(q('#nMg'))q('#nMg').onclick=()=>{const v=q('#nMs').value;if(!v){toast('เลือกภารกิจก่อน');return}ADM.ctl=false;npcMission(n,v);setTab('npc')};
    q('#nOff').onclick=()=>{ADM.sel=null;ADM.ctl=false;setTab('npc')};
    B.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;ADM.ctl=false;n.tx=null;
     if(a==='arrest'){arrestSuspect(n)}
@@ -1509,6 +1623,7 @@ function setTab(k){
  }else if(k==='ply'){
   B.innerHTML=`<div class="row"><button class="btn sm ghost" id="pAll">เลือกทั้งหมด</button><button class="btn sm ghost" id="pNone">ล้างที่เลือก</button><span class="lab">เลือก <b id="pc">0</b> คน</span></div>
   <div class="row"><select id="pZ" style="width:auto">${zoneOpts}</select><button class="btn sm" id="pTp">ย้ายที่เลือกไปโซน</button></div>
+  <div class="row"><button class="btn sm sun" id="pAsm">🚶 สั่งผู้เล่นที่เลือกไปจุดรวมพลที่ปลอดภัย</button></div>
   <div class="row"><input id="pMsg" maxlength="80" placeholder="ข้อความถึงที่เลือก" style="flex:1;min-width:120px"><button class="btn sm sun" id="pSend">ส่ง</button></div>
   <div class="row"><button class="btn sm ghost" id="pFz">ล็อกตัว</button><button class="btn sm ghost" id="pUf">ปลดล็อก</button><button class="btn sm red" id="pKick">🚪 เชิญออกจากห้อง</button></div>
   <p class="sub">ติ๊กผู้เล่น แล้วแตะพื้นในฉากเพื่อสั่งให้เดินไปที่นั่น</p><div class="list" id="pList"></div>`;
@@ -1518,6 +1633,7 @@ function setTab(k){
   q('#pTp').onclick=()=>{const zz=ZONES[q('#pZ').value];ids().forEach(p=>emit('cmd',{to:p,t:'tp',x:zz[0]+rnd(-2,2),z:zz[1]+rnd(-2,2),zn:zz[2]}));lg('evt','แอดมิน','','ย้ายผู้เล่น '+ADM.mp.size+' คนไป '+zz[2])};
   q('#pSend').onclick=()=>{const v=q('#pMsg').value.trim();if(!v)return;ids().forEach(p=>emit('cmd',{to:p,t:'msg',m:v}));q('#pMsg').value=''};
   q('#pFz').onclick=()=>ids().forEach(p=>{ADM.frz[p]=1;emit('cmd',{to:p,t:'frz',v:1})});
+  q('#pAsm').onclick=()=>{const l=ids();if(!l.length){toast('ยังไม่ได้ติ๊กเลือกผู้เล่น');return}l.forEach(p=>{const a=asmPt();emit('cmd',{to:p,t:'go',x:a[0],z:a[1],r:1})});lg('evt','แอดมิน','','สั่งผู้เล่น '+l.length+' คน ไปจุดรวมพล '+'AB'[asmSide])};
   q('#pKick').onclick=()=>{const l=ids();if(!l.length){toast('ยังไม่ได้ติ๊กเลือกผู้เล่น');return}l.forEach(p=>emit('cmd',{to:p,t:'kick'}));l.forEach(p=>ADM.mp.delete(p));lg('evt','แอดมิน','','เชิญผู้เล่น '+l.length+' คนออกจากห้อง');toast('เชิญออกแล้ว '+l.length+' คน')};
   q('#pUf').onclick=()=>ids().forEach(p=>{ADM.frz[p]=0;emit('cmd',{to:p,t:'frz',v:0})});
  }else if(k==='cam'){
@@ -1593,7 +1709,7 @@ function planCheck(){
   else if(it.kind==='evac'){if(civ.length){const a=civ.filter(n=>n.fl&(4|128)).length,p=Math.round(a/civ.length*100);res=p>=T?'pass':'fail';val=a+'/'+civ.length+' คน ('+p+'%, เป้า ≥'+T+'%)'}}
   else if(it.kind==='move'){if(med.length&&moveEver){const a=med.filter(n=>n.fl&4).length,p=Math.round(a/med.length*100);res=p>=T?'pass':'fail';val=a+'/'+med.length+' คน ('+p+'%, เป้า ≥'+T+'%)'}else if(med.length){res='fail';val='ยังไม่ได้สั่งเคลื่อนย้าย'}}
   else if(it.kind==='ack'){if(mb){const p=Math.round(ma/mb*100);res=p>=T?'pass':'fail';val=ma+'/'+mb+' ('+p+'%, เป้า ≥'+T+'%)'}}
-  else if(it.kind==='nohostage'){res=hostages.length?'fail':'pass';val=hostages.length?'ยังมีตัวประกัน '+hostages.length+' คน':'ไม่มีตัวประกันค้าง'}
+  else if(it.kind==='nohostage'){res=(hostages.length+tiedH.length)?'fail':'pass';val=(hostages.length+tiedH.length)?'ยังมีตัวประกัน '+(hostages.length+tiedH.length)+' คน':'ไม่มีตัวประกันค้าง'}
   else if(it.kind==='manual'){res=ADM.manual[it.id]?'pass':'fail';val='ผู้ประเมินติ๊ก'}
   r.push({id:it.id,name:it.name,kind:it.kind,res,val});
  }
